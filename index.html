@@ -17,7 +17,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:ital,wght@0,700;0,900;1,700;1,900&family=Noto+Serif+SC:wght@600;700;900&family=Inter:wght@400;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #1a0b2e;
+      --bg-dark: #071320;
       --emerald-glow: #10b981;
       --gold-glow: #f59e0b;
       --crimson-glow: #f43f5e;
@@ -38,7 +38,7 @@
        position: fixed;
       inset: 0;
       overflow: hidden;
-      background: #0d0618;
+      background: #071320;
       font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
       font-weight: 700;
       color: #fef3c7;
@@ -263,6 +263,30 @@
       <div id="canvasContainer" class="w-full h-full relative flex items-center justify-center overflow-hidden">
         <canvas id="courtCanvas" class="w-full h-full block"></canvas>
 
+        <!-- 顶部轻量悬浮菜单栏：包含闯关选关、新手教程开关、暂停/设置菜单 -->
+        <div id="topFloatingNav" class="pointer-events-auto absolute top-2.5 inset-x-3 z-40 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5">
+            <button id="topBarMenuBtn" type="button" class="px-3 py-1.5 rounded-full bg-slate-900/88 hover:bg-slate-800 text-emerald-300 border border-emerald-400/50 text-xs font-black shadow-lg backdrop-blur-md active:scale-95 transition flex items-center gap-1">
+              <span>☰</span><span>菜单</span>
+            </button>
+            <button id="topBarStageBtn" type="button" class="px-3 py-1.5 rounded-full bg-slate-900/88 hover:bg-slate-800 text-amber-200 border border-amber-400/50 text-xs font-black shadow-lg backdrop-blur-md active:scale-95 transition flex items-center gap-1">
+              <span>🗺️</span><span id="topBarStageLabel">闯关: 1-1 小林</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="topBarTutorialBtn" type="button" class="px-3 py-1.5 rounded-full bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 border border-emerald-400/60 text-xs font-black shadow-lg backdrop-blur-md active:scale-95 transition">
+              🎓 教程:开
+            </button>
+          </div>
+        </div>
+
+        <!-- 顶部新手教程分步指引浮窗 -->
+        <div id="topTutorialFloatingBanner" class="pointer-events-none absolute top-13 inset-x-3 z-30 flex justify-center">
+          <div id="topTutorialCard" class="px-3.5 py-1.5 rounded-xl bg-slate-950/88 border border-emerald-400/70 text-[11px] sm:text-xs font-bold text-emerald-100 shadow-xl backdrop-blur-md text-center max-w-md">
+            🎓【新手教程 1/4】点击球场任意位置发出高远球（每拍间隔仅可选 1 次步伐 + 1 次球路）
+          </div>
+        </div>
+
         <!-- 【核心单手大拇指操作区】：固定在屏幕中下方（你的半场 H * 0.72），平时完全隐藏，只在AI击球瞬间弹出 3x3 步伐盘 -> 原地切换 2x2 球路按钮！ -->
         <div id="centerFootworkOverlay" class="pointer-events-none absolute inset-x-0 bottom-[10dvh] sm:bottom-[12dvh] z-30 flex flex-col items-center justify-end px-3">
           <!-- 简短状态与倒计时细条 -->
@@ -292,9 +316,9 @@
               <span class="step-tag">左滑步</span>
             </div>
             <div class="dpad-center" id="dpadFootworkLabel">
-              <span class="text-[10px] text-amber-300 font-bold" id="centerCogSymbolBadge">重心[0]</span>
+              <span class="text-[10px] text-emerald-300 font-bold" id="centerCogSymbolBadge">单次步伐</span>
               <strong id="liveFootworkText" class="text-[10px] text-white mt-0.5">选步伐</strong>
-              <span id="sensoryCountdownText" class="text-[9px] text-cyan-300 font-mono">Perfect窗</span>
+              <span id="sensoryCountdownText" class="text-[9px] text-cyan-300 font-mono">限点1次</span>
             </div>
             <div class="dpad-btn" data-dir="right">
               <span class="font-black text-lg">→</span>
@@ -785,7 +809,7 @@
           noise.connect(bp);
           bp.connect(nGain);
           nGain.connect(this.ctx.destination);
-          noise.onended = () => { try { noise.disconnect(); } catch (e) {} };
+          noise.onended = () => { try { noise.disconnect(); bp.disconnect(); nGain.disconnect(); } catch (e) {} };
           noise.start(now);
 
           [1760, 2637, 3951].forEach((freq, idx) => {
@@ -825,6 +849,7 @@
           g.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
           osc.connect(g);
           g.connect(this.ctx.destination);
+          osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
           osc.start(now);
           osc.stop(now + 0.09);
         }
@@ -851,8 +876,8 @@
         noise.connect(lp);
         lp.connect(g);
         g.connect(this.ctx.destination);
-        noise.onended = () => { try { noise.disconnect(); } catch (e) {} };
-          noise.start(now);
+        noise.onended = () => { try { noise.disconnect(); lp.disconnect(); g.disconnect(); } catch (e) {} };
+        noise.start(now);
       },
 
       playHit(type = 'normal') {
@@ -1268,13 +1293,18 @@
       pGridIdx: 7,
       pHand: 'forehand',
       pCog: 85,
-      cogSymbol: '0',          // 当前重心符号: '+' (高重心) | '0' (标准重心) | '-' (低重心)
-      cogHistory: ['0'],       // 本局重心符号变化链，如 ['0', '+', '0', '-']
+      cogSymbol: '0',          // 当前重心符号: '+' (高重心) | '0' (标准重心) | '-' (低重心)（后台静默运行）
+      cogHistory: ['0'],       // 本局重心符号变化链（后台运行）
       cogImbalanced: false,    // 若 '+' 与 '-' 之间未经过 '0'，判定重心失衡（下一拍反应慢0.5秒）
       lastRacketActionText: '准备架拍',
       selectedFootworkDir: 'down',
       recommendedDirs: ['down'],
       sensoryLockUntilMs: 0,
+      stepUsedThisTurn: false, // 严禁连点锁：每一拍间隔只能进行 1 次步伐选择
+      shotUsedThisTurn: false, // 严禁连点锁：每一拍间隔只能进行 1 次球路选择
+      serveUsedThisPoint: false, // 发球防连点锁
+      stepChosenAtMs: 0,       // 记录选步伐的时间戳，防止同位置连点误触球路
+      graffitiCallouts: [],    // 涂鸦旁白队列（球路以街头涂鸦旁白样式浮现并渐变消失）
       hitStartTime: 0,
       scoreBannerText: '',
       scoreBannerSub: '',
@@ -1651,10 +1681,61 @@
     }
 
     function spawnFloatingText(normX, normY, text, color = '#fde047') {
-      if (GameState.floatingTexts.length >= 24) {
+      if (GameState.floatingTexts.length >= 16) {
         GameState.floatingTexts.shift();
       }
       GameState.floatingTexts.push({ x: normX, y: normY, text, color, life: 1.0 });
+    }
+
+    const GRAFFITI_STYLE_MAP = {
+      '重杀':     { tag: '重杀 SMASH!',     color: '#f43f5e', bg: 'rgba(136, 19, 55, 0.88)',   border: '#fda4af' },
+      '点杀':     { tag: '点杀 SNAP!',      color: '#fb7185', bg: 'rgba(159, 18, 57, 0.85)',   border: '#fecdd3' },
+      '劈杀':     { tag: '劈杀 SLASH!',     color: '#f97316', bg: 'rgba(124, 45, 18, 0.85)',   border: '#fed7aa' },
+      '扑球':     { tag: '扑球 POUNCE!',    color: '#ef4444', bg: 'rgba(127, 29, 29, 0.88)',   border: '#fca5a5' },
+      '高远球':   { tag: '高远 CLEAR!',     color: '#34d399', bg: 'rgba(6, 78, 59, 0.85)',     border: '#a7f3d0' },
+      '高远发球': { tag: '发球 SERVE!',     color: '#34d399', bg: 'rgba(6, 78, 59, 0.85)',     border: '#a7f3d0' },
+      '平高球':   { tag: '平高 FAST CLEAR!',color: '#2dd4bf', bg: 'rgba(19, 78, 74, 0.85)',    border: '#99f6e4' },
+      '吊球':     { tag: '吊球 DROP!',      color: '#facc15', bg: 'rgba(113, 63, 18, 0.85)',   border: '#fef08a' },
+      '劈吊':     { tag: '劈吊 SLICE!',     color: '#fbbf24', bg: 'rgba(120, 53, 15, 0.85)',   border: '#fde68a' },
+      '滑板':     { tag: '滑板 DRIFT!',     color: '#c084fc', bg: 'rgba(88, 28, 135, 0.85)',   border: '#e9d5ff' },
+      '假杀真吊': { tag: '假杀真吊 FEINT!', color: '#e879f9', bg: 'rgba(112, 26, 117, 0.88)',  border: '#f5d0fe' },
+      '放网':     { tag: '放网 NET DROP!',  color: '#38bdf8', bg: 'rgba(12, 74, 110, 0.85)',   border: '#bae6fd' },
+      '搓球':     { tag: '搓球 SPIN!',      color: '#60a5fa', bg: 'rgba(30, 58, 138, 0.85)',   border: '#bfdbfe' },
+      '勾对角':   { tag: '勾球 HOOK!',      color: '#818cf8', bg: 'rgba(49, 46, 129, 0.85)',   border: '#c7d2fe' },
+      '挑球':     { tag: '挑球 LIFT!',      color: '#a3e635', bg: 'rgba(54, 83, 20, 0.85)',    border: '#d9f99d' },
+      '平抽':     { tag: '平抽 DRIVE!',     color: '#fb923c', bg: 'rgba(124, 45, 18, 0.85)',   border: '#fed7aa' },
+      '推球':     { tag: '推球 PUSH!',      color: '#22d3ee', bg: 'rgba(22, 78, 99, 0.85)',    border: '#a5f3fc' },
+      '软压':     { tag: '软压 PRESS!',     color: '#f472b6', bg: 'rgba(131, 24, 67, 0.85)',   border: '#fbcfe8' }
+    };
+
+    function spawnGraffitiCallout(shotName, isPlayer = true) {
+      if (GameState.graffitiCallouts.length >= 6) {
+        GameState.graffitiCallouts.shift();
+      }
+      const cleanName = String(shotName || '击球').replace(/^🎴\s*|^💫\s*/, '');
+      const style = GRAFFITI_STYLE_MAP[cleanName] || {
+        tag: `${cleanName} !`,
+        color: isPlayer ? '#fde047' : '#fb7185',
+        bg: isPlayer ? 'rgba(6, 78, 59, 0.86)' : 'rgba(136, 19, 55, 0.86)',
+        border: isPlayer ? '#6ee7b7' : '#fda4af'
+      };
+      // 涂鸦旁白出现在球场两侧黄金视觉区，带街头涂鸦倾角，完全不遮挡人物头顶
+      const nx = isPlayer
+        ? (GameState.playerVisual.x < 0.5 ? 0.24 : 0.76)
+        : (GameState.aiVisual.x < 0.5 ? 0.26 : 0.74);
+      const ny = isPlayer ? 0.64 : 0.31;
+      const tiltRad = ((isPlayer ? -8 : 7) + (Math.random() - 0.5) * 6) * Math.PI / 180;
+      GameState.graffitiCallouts.push({
+        x: nx,
+        y: ny,
+        text: style.tag,
+        color: style.color,
+        bg: style.bg,
+        border: style.border,
+        tilt: tiltRad,
+        life: 1.0,
+        isPlayer
+      });
     }
 
     function triggerZeusLightning(normX, normY) {
@@ -1748,6 +1829,11 @@
       GameState.lastRacketActionText = '准备架拍';
       GameState.selectedFootworkDir = 'down';
       GameState.sensoryLockUntilMs = 0;
+      GameState.stepUsedThisTurn = false;
+      GameState.shotUsedThisTurn = false;
+      GameState.serveUsedThisPoint = false;
+      GameState.stepChosenAtMs = 0;
+      GameState.graffitiCallouts = [];
       GameState.combo = 0;
       GameState.lastPlayerShot = '高远球';
       GameState.lastPlayerTraj = 'high';
@@ -1792,6 +1878,34 @@
 
       document.getElementById('headerChapterBadge').textContent = `第${st.chapter}章 ${st.nodeInChap} · ${st.name}`;
       document.getElementById('btnSkipTutorial').classList.toggle('hidden', GameState.tutorialStep === 0);
+
+      const topStageLbl = document.getElementById('topBarStageLabel');
+      if (topStageLbl) {
+        topStageLbl.textContent = `闯关: ${st.nodeInChap} ${st.name.split('·').pop().trim()} (${GameState.playerScore}:${GameState.aiScore})`;
+      }
+      const topTutBtn = document.getElementById('topBarTutorialBtn');
+      if (topTutBtn) {
+        const tutOn = GameState.tutorialActive && GameState.tutorialStep > 0;
+        topTutBtn.textContent = tutOn ? `🎓 教程:${GameState.tutorialStep}/4` : '🎓 教程:关';
+        topTutBtn.className = tutOn
+          ? 'px-3 py-1.5 rounded-full bg-emerald-900/92 hover:bg-emerald-800 text-emerald-200 border border-emerald-400 text-xs font-black shadow-lg backdrop-blur-md active:scale-95 transition'
+          : 'px-3 py-1.5 rounded-full bg-slate-900/85 hover:bg-slate-800 text-slate-300 border border-slate-600 text-xs font-bold shadow-lg backdrop-blur-md active:scale-95 transition';
+      }
+      const topTutBanner = document.getElementById('topTutorialFloatingBanner');
+      const topTutCard = document.getElementById('topTutorialCard');
+      if (topTutBanner && topTutCard) {
+        const tutOn = GameState.tutorialActive && GameState.tutorialStep > 0;
+        topTutBanner.classList.toggle('hidden', !tutOn);
+        if (tutOn) {
+          const tutStepTexts = {
+            1: '🎓【新手教程 1/4】👆 点击球场任意位置发球（每拍间隔严格限选 1 次步伐 + 1 次球路）',
+            2: '🎓【新手教程 2/4】⚡ 对手出球瞬间，在下方九宫格点击 1 次发光的推荐步伐方向（不可连点）',
+            3: '🎓【新手教程 3/4】🏸 步伐到位后，在原地弹出的 4 个球路按钮中点击 1 次回击（不可连点）',
+            4: '🎓【新手教程 4/4】🎨 球路会以涂鸦旁白浮现并渐隐，重心在后台自动运转，继续得分赢下比赛！'
+          };
+          topTutCard.textContent = tutStepTexts[GameState.tutorialStep] || tutStepTexts[1];
+        }
+      }
 
       document.getElementById('attrPowerText').textContent = `💪力量:${GameState.attrs.power}`;
       document.getElementById('attrControlText').textContent = `🎯控球:${GameState.attrs.control}`;
@@ -2001,35 +2115,14 @@
       const cogInfo = getShotCogInfo(shotName);
       GameState.lastRacketActionText = cogInfo.racketAct;
 
-      // 核心规则：如果 '+' 和 '-' 之间没有经过 '0'（即 '+' -> '-' 或 '-' -> '+'），立即判定【重心失衡】！
+      // 核心规则（后台静默运行）：如果 '+' 和 '-' 之间没有经过 '0'，后台判定重心失衡，下一拍反应延迟 0.5 秒
       if ((prevSym === '+' && newSym === '-') || (prevSym === '-' && newSym === '+')) {
         GameState.cogImbalanced = true;
         GameState.pCog = 25;
         addPlayerPosture(15);
-        spawnFloatingText(
-          GameState.playerVisual.x,
-          GameState.playerVisual.y - 0.09,
-          `⚠️ 重心失衡 [${prevSym}]→[${newSym}] 未经[0]! 下拍反应慢0.5秒!`,
-          '#f43f5e'
-        );
-        showCanvasBanner(
-          `⚠️ 重心失衡 ([${prevSym}] → [${newSym}] 未经过 [0])!`,
-          `高重心[+]与低重心[-]直接切换导致失衡！接下一拍球时反应将比平时慢 0.5 秒！打[0]标准重心球路可恢复！`,
-          '#f43f5e'
-        );
       } else if (newSym === '0') {
-        // 经过 '0' 标准重心，解除重心失衡！
-        const wasImbalanced = GameState.cogImbalanced;
         GameState.cogImbalanced = false;
         GameState.pCog = 88;
-        if (wasImbalanced) {
-          spawnFloatingText(
-            GameState.playerVisual.x,
-            GameState.playerVisual.y - 0.08,
-            `✅ 回归 [0] 标准重心 · 失衡已解除!`,
-            '#34d399'
-          );
-        }
       } else {
         GameState.pCog = newSym === '+' ? 75 : 55;
       }
@@ -2107,7 +2200,7 @@
       return null;
     }
 
-    // 同步屏幕中下方（H * 0.72 单手大拇指热区）的 3x3 步伐盘 与 2x2 球路盘
+    // 同步屏幕中下方（H * 0.72 单手大拇指热区）的 3x3 步伐盘 与 2x2 球路盘（每拍严格限制1次步伐+1次球路）
     function syncCenterFootworkCompass() {
       const dpad = document.getElementById('dPad');
       const deck = document.getElementById('actionDeckContainer');
@@ -2117,12 +2210,12 @@
 
       const btns = dpad.querySelectorAll('.dpad-btn');
       const now = performance.now();
-      const isStepPhase = (GameState.phase === 'ai_incoming' && GameState.incomingShot);
-      const isShotPhase = (GameState.phase === 'player_offense');
+      const isStepPhase = (GameState.phase === 'ai_incoming' && GameState.incomingShot && !GameState.stepUsedThisTurn);
+      const isShotPhase = (GameState.phase === 'player_offense' && !GameState.shotUsedThisTurn);
       const isDelayedLocked = isStepPhase && (now < GameState.sensoryLockUntilMs);
 
       if (isStepPhase) {
-        // 第一步：弹出 3×3 九宫格步伐盘
+        // 第一步：弹出 3×3 九宫格步伐盘（只能点一次）
         dpad.classList.remove('dpad-hidden');
         dpad.classList.add('dpad-sensory-active');
         deck.classList.add('hidden');
@@ -2130,27 +2223,26 @@
           header.classList.remove('hidden');
           if (isDelayedLocked) {
             const remainSec = ((GameState.sensoryLockUntilMs - now) / 1000).toFixed(2);
-            titleText.textContent = `⚠️ 重心失衡慢 0.5s 惩罚中 (${remainSec}s)...`;
+            titleText.textContent = `⏳ 步伐调整延迟 (${remainSec}s)...`;
             header.className = 'mb-2 px-3.5 py-1 rounded-full bg-rose-950/95 border border-rose-400 text-xs font-black text-rose-200 shadow-xl flex flex-col items-center gap-1 animate-pulse';
           } else {
-            const inc = GameState.incomingShot;
-            titleText.textContent = `⚡ 第一步（选步伐）：对手打来【${inc ? inc.name : '来球'}】`;
-            header.className = 'mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-amber-400 text-xs font-black text-amber-200 shadow-xl flex flex-col items-center gap-1';
+            titleText.textContent = `⚡ 第一步：点击选择步伐方向 (本拍限1次)`;
+            header.className = 'mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-emerald-400 text-xs font-black text-emerald-200 shadow-xl flex flex-col items-center gap-1';
           }
         }
       } else if (isShotPhase) {
-        // 第二步：步伐盘瞬间消失，原地弹出 2×2 大球路按钮（大拇指无需移动！）
+        // 第二步：步伐盘瞬间消失，原地弹出 2×2 大球路按钮（只能点一次！）
         dpad.classList.remove('dpad-sensory-active');
         dpad.classList.add('dpad-hidden');
         deck.classList.remove('hidden');
         if (header && titleText) {
           header.classList.remove('hidden');
           const fw = FOOTWORK_DIRS[GameState.selectedFootworkDir] || FOOTWORK_DIRS.down;
-          titleText.textContent = `🏸 第二步（选球路）：${fw.name}到位 · 重心[${GameState.cogSymbol}]`;
+          titleText.textContent = `🏸 第二步：${fw.name}到位 · 选择回击球路 (限1次)`;
           header.className = 'mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-cyan-400 text-xs font-black text-cyan-200 shadow-xl flex flex-col items-center gap-1';
         }
       } else {
-        // 发球阶段、球飞行阶段、回合结算阶段：UI 全部消失，画面只留球场、两个骨骼小人、球网与羽毛球！
+        // 已经选完步伐+球路，或处于发球/飞行/结算阶段：面板全部收起，严禁任何连点！
         dpad.classList.remove('dpad-sensory-active');
         dpad.classList.add('dpad-hidden');
         deck.classList.add('hidden');
@@ -2165,21 +2257,23 @@
       });
     }
 
-    // 第一步：点击八向步伐后，小人自动滑步到位并停留，原地切换出 2×2 球路按钮
+    // 第一步：点击八向步伐后立即锁定本拍步伐（严禁连点），小人自动滑步到位并切换 2×2 球路按钮
     function handleSensoryFootworkSelect(dirKey) {
-      if (GameState.paused || GameState.swingLock || GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
+      if (GameState.paused || GameState.swingLock || GameState.stepUsedThisTurn || GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
       const now = performance.now();
 
       if (now < GameState.sensoryLockUntilMs) {
-        const waitSec = ((GameState.sensoryLockUntilMs - now) / 1000).toFixed(2);
         SoundEngine.playHit('miss');
-        spawnFloatingText(
-          GameState.playerVisual.x,
-          GameState.playerVisual.y - 0.06,
-          `⏳ 重心失衡慢 0.5s (${waitSec}s)`,
-          '#f43f5e'
-        );
         return;
+      }
+
+      // 立即锁定本拍第一次判断（步伐），严禁再次点击步伐！
+      GameState.stepUsedThisTurn = true;
+      GameState.shotUsedThisTurn = false;
+      GameState.stepChosenAtMs = now;
+
+      if (GameState.tutorialActive && GameState.tutorialStep === 2) {
+        GameState.tutorialStep = 3;
       }
 
       const fw = FOOTWORK_DIRS[dirKey] || FOOTWORK_DIRS.down;
@@ -2192,7 +2286,6 @@
       const distToBall = Math.hypot(fw.destX - inc.targetX, fw.destY - inc.targetY);
       GameState.lastStepWasRecommended = isRecommended;
 
-      // 小人自动跑位到该步伐目标位置并停留（不再强制拉回中心，纯粹由你的步伐决定站位）
       const destX = isRecommended ? inc.targetX : fw.destX;
       const destY = isRecommended ? inc.targetY : fw.destY;
       GameState.playerVisual.vx = fw.vx;
@@ -2202,7 +2295,6 @@
       SoundEngine.playJoyFlick();
 
       if (!isRecommended && distToBall > 0.36) {
-        // 步伐完全选反导致跑向错误区域漏球
         SoundEngine.playHit('miss');
         spawnFloatingText(inc.targetX, inc.targetY - 0.05, `💔 步伐跑反 (${fw.name})`, '#f43f5e');
         scorePoint('ai', `步伐选错(${fw.name})`);
@@ -2211,7 +2303,7 @@
 
       GameState.pStamina = Math.max(5, GameState.pStamina - 3);
 
-      // 立即原地切换为第二步：2×2 专属球路按钮
+      // 原地切换为第二步：2×2 专属球路按钮
       GameState.shotDecisionStartTime = now;
       GameState.shotDecisionExpireTime = now + 1800;
       GameState.timeScale = 0.18;
@@ -2231,43 +2323,38 @@
       if (!container) return;
       container.innerHTML = '';
 
-      if (GameState.phase !== 'player_offense') {
+      if (GameState.phase !== 'player_offense' || GameState.shotUsedThisTurn) {
         syncCenterFootworkCompass();
         return;
       }
 
-      // 第二步：在刚才 3×3 步伐盘的完全相同位置（H * 0.72）弹出 2×2 大按钮！
+      // 第二步：在刚才 3×3 步伐盘的完全相同位置弹出极简 2×2 球路按钮（不显示重心公式，重心在后台运行）
       const fw = FOOTWORK_DIRS[GameState.selectedFootworkDir] || FOOTWORK_DIRS.down;
-      const prevSym = GameState.cogSymbol || '0';
       const shots = (fw.allowedShots || ['高远球', '吊球', '重杀', '平高球']).slice(0, 4);
 
       shots.forEach((shotName) => {
         const s = SHOTS[shotName];
         if (!s) return;
-        const cogInfo = getShotCogInfo(s.name);
-        const nextSym = cogInfo.sym;
-        const willImbalance = (prevSym === '+' && nextSym === '-') || (prevSym === '-' && nextSym === '+');
 
-        let borderCls = 'border-amber-400 bg-slate-950/94';
-        if (nextSym === '+') borderCls = 'border-rose-400 bg-rose-950/94';
-        else if (nextSym === '-') borderCls = 'border-cyan-400 bg-cyan-950/94';
-        else borderCls = 'border-emerald-400 bg-emerald-950/94';
+        let borderCls = 'border-emerald-400 bg-slate-950/92';
+        if (s.trajType === 'smash') borderCls = 'border-rose-400 bg-rose-950/92';
+        else if (s.trajType === 'drop') borderCls = 'border-amber-400 bg-amber-950/92';
+        else if (s.trajType === 'flat') borderCls = 'border-cyan-400 bg-cyan-950/92';
 
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `shot-btn ${borderCls} border-2 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-2xl active:scale-95`;
         btn.innerHTML = `
           <div class="text-base sm:text-lg font-black text-white leading-tight">${s.icon} ${s.name}</div>
-          <div class="text-[11px] font-mono font-extrabold mt-1 ${willImbalance ? 'text-rose-300 animate-pulse' : 'text-amber-300'}">
-            ${willImbalance ? `⚠️[${prevSym}]→[${nextSym}]失衡` : `重心 [${nextSym}]`}
-          </div>
-          <div class="text-[10px] text-slate-300 truncate max-w-full mt-0.5">${cogInfo.racketAct}</div>
+          <div class="text-[11px] text-emerald-200/90 font-bold mt-1">${s.trajType === 'smash' ? '强攻下压' : (s.trajType === 'drop' ? '网前小球' : (s.trajType === 'high' ? '底线高球' : '平快抽压'))}</div>
         `;
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
           e.stopPropagation();
           const now = performance.now();
-          if (GameState.swingLock || now - GameState.pressSwipe.lastFiredAt < 160) return;
+          // 严禁连点：如果已选过球路、或距离刚才选步伐不足 165ms（防止同位置双击误触），直接拦截！
+          if (GameState.paused || GameState.swingLock || GameState.shotUsedThisTurn || GameState.phase !== 'player_offense') return;
+          if (now - (GameState.stepChosenAtMs || 0) < 165) return;
           GameState.pressSwipe.lastFiredAt = now;
           executePlayerOffenseShot(s, 0, 0);
         });
@@ -2343,13 +2430,20 @@
       return true;
     }
 
-    // 点击屏幕任意位置直接发球（极简纯单手体验）
+    // 点击屏幕任意位置直接发球（每分严格限发1次，严禁连点）
     function executePlayerServe(serveType = 'high', cost = 2) {
-      if (GameState.paused || GameState.swingLock || GameState.phase !== 'serve') return;
+      if (GameState.paused || GameState.swingLock || GameState.serveUsedThisPoint || GameState.phase !== 'serve') return;
+      GameState.serveUsedThisPoint = true;
+      GameState.stepUsedThisTurn = true;
+      GameState.shotUsedThisTurn = true;
+      if (GameState.tutorialActive && GameState.tutorialStep === 1) {
+        GameState.tutorialStep = 2;
+      }
       GameState.phase = 'shuttle_to_ai';
       GameState.timeScale = 1.0;
       GameState.timeScaleTimer = 0;
       applyCogSymbolTransition('0', '高远球');
+      spawnGraffitiCallout('高远发球', true);
       syncCenterFootworkCompass();
       renderActionDeck();
       SoundEngine.startBgm();
@@ -2612,6 +2706,10 @@
         expireTime: now + 110 + baseDur + (GameState.difficulty === 'novice' ? 650 : 350) - (penaltyMs > 0 ? 220 : 0)
       };
 
+      // AI 击球瞬间：解锁本拍玩家的【1次步伐选择 + 1次球路选择】配额
+      GameState.stepUsedThisTurn = false;
+      GameState.shotUsedThisTurn = false;
+      GameState.stepChosenAtMs = 0;
       GameState.phase = 'ai_incoming';
       GameState.recommendedDirs = computeRecommendedFootworkDirs(targetX, targetY);
       GameState.sensoryLockUntilMs = now + 110 + penaltyMs;
@@ -2629,6 +2727,7 @@
         (chosen.isSmash || chosen.isAiFeint),
         () => {
           SoundEngine.playHit(chosen.isSmash ? 'smash' : 'normal');
+          spawnGraffitiCallout(chosen.name, false);
           launchShuttle(GameState.aiVisual.x, GameState.aiVisual.y, targetX, targetY, {
             trajType: chosen.trajType,
             speed: chosen.speed
@@ -2941,22 +3040,26 @@
 
     // ==================== 11. COUNTER-ATTACK & OFFENSE EXECUTION (FEATHERBLADE POSTURE + BOONS) ====================
     function executePlayerOffenseShot(shot, holdChargePct = 0, swipeDeltaY = 0) {
-      if (GameState.paused || GameState.swingLock || GameState.phase !== 'player_offense') return;
+      if (GameState.paused || GameState.swingLock || GameState.shotUsedThisTurn || GameState.phase !== 'player_offense') return;
 
       const actualCost = hasBoon('hermes') ? shot.cost * 0.5 : shot.cost;
       if (GameState.pStamina < actualCost && shot.cost >= 3) {
         SoundEngine.playHit('miss');
-        spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.06, `⚡体力不足 (${Math.round(GameState.pStamina)}/${actualCost})! 请打过渡/挑球或稳心回体`, '#f43f5e');
-        showCanvasBanner('⚡ 体力透支，无法强行重杀!', '请使用低耗体【高远球/挑球/正反手过渡】调整呼吸！', '#f43f5e');
+        spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.06, `⚡体力不足 (${Math.round(GameState.pStamina)}/${actualCost})!`, '#f43f5e');
         return;
       }
 
-      // 立即切换至 'shuttle_to_ai' 状态，结束第二段感官慢动作，恢复正常时间流速，并结算重心符号 (+ / - / 0)！
+      // 立即锁定本拍球路选择（严禁连点），切换至 'shuttle_to_ai' 状态并收起所有按钮！
+      GameState.shotUsedThisTurn = true;
+      if (GameState.tutorialActive && GameState.tutorialStep === 3) {
+        GameState.tutorialStep = 4;
+      }
       GameState.phase = 'shuttle_to_ai';
       GameState.timeScale = 1.0;
       GameState.timeScaleTimer = 0;
       const cogInfo = getShotCogInfo(shot.name);
       applyCogSymbolTransition(cogInfo.sym, shot.name);
+      spawnGraffitiCallout(shot.name, true);
       syncCenterFootworkCompass();
       renderActionDeck();
 
@@ -3394,7 +3497,7 @@
           SoundEngine.playHit(tacticalComboMult >= 1.75 || isPerfectOffense ? 'parry' : (shot.trajType === 'smash' ? 'smash' : 'normal'));
           SoundEngine.triggerShake(shot.trajType === 'smash' ? 'heavy_smash' : (shot.trajType === 'drop' ? 'light_tap' : 'normal_hit'), null);
           spawnParticles(tx, ty, shot.trajType === 'smash' ? '#f43f5e' : '#fbbf24', tacticalComboMult >= 1.75 ? 36 : 22);
-          spawnFloatingText(tx, ty - 0.04, `${offenseJudgeTag} ${shot.name}${arcLabel} · 敌破绽+${postureDmg}`, isPerfectOffense ? '#fde047' : '#38bdf8');
+          // 球路名称已通过涂鸦旁白(Graffiti Callout)展示
 
           if (tacticalComboTitle) {
             // 【策略任务四：战术流派动态反馈】拉吊突击等组合达成时，破绽条金色残影显示“战术压制！”，AI 陷入 1 秒踉跄动作
@@ -3522,6 +3625,10 @@
       GameState.lastRacketActionText = '准备架拍';
       GameState.selectedFootworkDir = 'down';
       GameState.sensoryLockUntilMs = 0;
+      GameState.stepUsedThisTurn = false;
+      GameState.shotUsedThisTurn = false;
+      GameState.serveUsedThisPoint = false;
+      GameState.stepChosenAtMs = 0;
       startEaseOutMove(GameState.playerVisual, 0.5, 0.85, 0.28);
       startEaseOutMove(GameState.aiVisual, 0.5, 0.20, 0.28);
 
@@ -3535,6 +3642,11 @@
         GameState.xp += 8;
       }
 
+      if (GameState.tutorialActive && GameState.tutorialStep === 4) {
+        GameState.tutorialStep = 0;
+        GameState.tutorialActive = false;
+      }
+
       // 得分瞬间在屏幕正中央飘出巨大比分特效（如 "1 : 0  (对手下网失误)"），飘完自动消失！
       GameState.scoreBannerText = `${GameState.playerScore} : ${GameState.aiScore}`;
       GameState.scoreBannerSub = reasonText || (winner === 'player' ? '我方得分' : '对手得分');
@@ -3546,6 +3658,13 @@
       updateAllUI();
       renderActionDeck();
       syncCenterFootworkCompass();
+
+      // 检查是否达到本关目标分（闯关晋级或重赛）
+      if (GameState.playerScore >= GameState.targetScore) {
+        scheduleAction(650, () => { openMatchEndModal(true); }, 'matchEndModal');
+      } else if (GameState.aiScore >= GameState.targetScore) {
+        scheduleAction(650, () => { openMatchEndModal(false); }, 'matchEndModal');
+      }
     }
 
     // ==================== 12. FEATHERBLADE BOON MODAL & GAME MODALS ====================
@@ -3940,13 +4059,70 @@
       GameState.paused = true;
       const st = getCurrentStage();
       const modal = document.getElementById('modalOverlay');
-      document.getElementById('overlayIcon').textContent = '⏸️';
-      document.getElementById('overlayTitle').textContent = '比赛已暂停 (计时器已冻结)';
-      const boonNames = GameState.boons.length
-        ? GameState.boons.map(id => (TACTICAL_CARDS.find(b => b.id === id) || {}).name).join(' ')
-        : '暂无';
-      document.getElementById('overlayDesc').textContent = `当前关卡：第${st.chapter}章 ${st.nodeInChap} · ${st.name} ｜ 已获战术流派：${boonNames}`;
-      document.getElementById('overlayChoices').innerHTML = '';
+      document.getElementById('overlayIcon').textContent = '⚙️';
+      document.getElementById('overlayTitle').textContent = '游戏菜单 & 闯关设置';
+      const diffNames = { novice: '🛡️ 新手保护 (宽裕慢动作)', standard: '⚔️ 标准竞技', hardcore: '🔥 硬核极速' };
+      document.getElementById('overlayDesc').textContent = `当前关卡：第${st.chapter}章 ${st.nodeInChap} · ${st.name} (${st.targetScore}分制) ｜ 当前比分 ${GameState.playerScore} : ${GameState.aiScore}`;
+
+      const choicesBox = document.getElementById('overlayChoices');
+      choicesBox.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          <button id="menuBtnToggleDiff" type="button" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-400/50 text-left flex items-center justify-between">
+            <span class="text-slate-300 font-bold">🎯 反应难度</span>
+            <span id="menuDiffVal" class="text-emerald-300 font-black">${diffNames[GameState.difficulty] || '新手保护'}</span>
+          </button>
+          <button id="menuBtnToggleTut" type="button" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-amber-400/50 text-left flex items-center justify-between">
+            <span class="text-slate-300 font-bold">🎓 新手教程指引</span>
+            <span id="menuTutVal" class="text-amber-300 font-black">${GameState.tutorialActive && GameState.tutorialStep > 0 ? '开启中 (点击重播/关)' : '已关闭 (点击重开)'}</span>
+          </button>
+          <button id="menuBtnToggleSound" type="button" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-cyan-400/50 text-left flex items-center justify-between">
+            <span class="text-slate-300 font-bold">🎵 赛场音效/BGM</span>
+            <span id="menuSoundVal" class="text-cyan-300 font-black">${SoundEngine.bgmEnabled ? '开启' : '静音'}</span>
+          </button>
+          <button id="menuBtnOpenIntel" type="button" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-400/50 text-left flex items-center justify-between">
+            <span class="text-slate-300 font-bold">📋 规则与玩法说明</span>
+            <span class="text-purple-300 font-black">查看详情 →</span>
+          </button>
+        </div>
+      `;
+
+      const btnDiff = document.getElementById('menuBtnToggleDiff');
+      if (btnDiff) {
+        btnDiff.addEventListener('click', () => {
+          const order = ['novice', 'standard', 'hardcore'];
+          GameState.difficulty = order[(order.indexOf(GameState.difficulty) + 1) % order.length];
+          document.getElementById('menuDiffVal').textContent = diffNames[GameState.difficulty];
+        });
+      }
+      const btnTut = document.getElementById('menuBtnToggleTut');
+      if (btnTut) {
+        btnTut.addEventListener('click', () => {
+          if (GameState.tutorialActive && GameState.tutorialStep > 0) {
+            GameState.tutorialActive = false;
+            GameState.tutorialStep = 0;
+          } else {
+            GameState.tutorialActive = true;
+            GameState.tutorialStep = 1;
+          }
+          document.getElementById('menuTutVal').textContent = (GameState.tutorialActive && GameState.tutorialStep > 0) ? '开启中 (第1步)' : '已关闭';
+          updateAllUI();
+        });
+      }
+      const btnSnd = document.getElementById('menuBtnToggleSound');
+      if (btnSnd) {
+        btnSnd.addEventListener('click', () => {
+          SoundEngine.bgmEnabled = !SoundEngine.bgmEnabled;
+          document.getElementById('menuSoundVal').textContent = SoundEngine.bgmEnabled ? '开启' : '静音';
+        });
+      }
+      const btnIntel = document.getElementById('menuBtnOpenIntel');
+      if (btnIntel) {
+        btnIntel.addEventListener('click', () => {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          openIntelModal();
+        });
+      }
 
       const btnsBox = document.getElementById('overlayButtons');
       btnsBox.innerHTML = '';
@@ -4142,50 +4318,31 @@
 
     function evaluateShuttle3D(sh, u) {
       const t = Math.max(0, Math.min(1, u));
+      // 平滑自然的羽毛球空气动力学水平阻尼与抛物线轨迹（彻底去除诡异的 S/C 横向扭曲和折线感）
       let horizFrac = t;
       let z = 0;
 
       if (sh.trajType === 'high') {
-        if (t < 0.70) {
-          horizFrac = (t / 0.70) * 0.87;
-        } else {
-          const tail = (t - 0.70) / 0.30;
-          horizFrac = 0.87 + (1 - Math.pow(1 - tail, 2.2)) * 0.13;
-        }
-        if (t < 0.46) {
-          const p = t / 0.46;
-          z = sh.startZ + (0.76 - sh.startZ) * (1 - Math.pow(1 - p, 2.0));
-        } else {
-          const p = (t - 0.46) / 0.54;
-          z = 0.76 * Math.pow(1 - p, 1.85);
-        }
+        // 高远球/挑球：平滑微阻尼抛物线，顶点圆润自然
+        horizFrac = 1 - Math.pow(1 - t, 1.18);
+        z = sh.startZ * (1 - t) + Math.sin(t * Math.PI) * 0.52;
       } else if (sh.trajType === 'smash') {
-        horizFrac = 1 - Math.pow(1 - t, 1.15);
-        z = sh.startZ * Math.pow(1 - t, 1.08);
-      } else if (sh.trajType === 'drop') {
-        if (t < 0.46) {
-          const p = t / 0.46;
-          horizFrac = p * 0.60;
-          z = sh.startZ + 0.22 * Math.sin(p * Math.PI * 0.55);
-        } else {
-          const p = (t - 0.46) / 0.54;
-          horizFrac = 0.60 + (1 - Math.pow(1 - p, 2.4)) * 0.40;
-          z = (sh.startZ + 0.18) * (1 - Math.pow(p, 1.55));
-        }
-      } else {
+        // 杀球/扑球：干脆利落的直线下压并带微弧度过网
         horizFrac = t;
-        z = sh.startZ * (1 - t * 0.82) + Math.sin(t * Math.PI) * 0.14;
+        z = sh.startZ * (1 - t) + Math.sin(t * Math.PI) * 0.08;
+      } else if (sh.trajType === 'drop') {
+        // 吊球/放网/搓球：轻巧柔和的过网抛物线
+        horizFrac = 1 - Math.pow(1 - t, 1.12);
+        z = sh.startZ * (1 - t) + Math.sin(t * Math.PI) * 0.24;
+      } else {
+        // 平高球/平抽/推球：流畅的低平弧线
+        horizFrac = t;
+        z = sh.startZ * (1 - t) + Math.sin(t * Math.PI) * 0.18;
       }
 
-      let cx = sh.startX + ((sh.baseTargetX || sh.targetX) - sh.startX) * horizFrac;
+      const targetX = sh.baseTargetX !== undefined ? sh.baseTargetX : sh.targetX;
+      const cx = Math.max(0.02, Math.min(0.98, sh.startX + (targetX - sh.startX) * horizFrac));
       const cy = sh.startY + (sh.targetY - sh.startY) * horizFrac;
-      // 【维度二·任务2：侧旋与切削 S/C 型弧线弯折】
-      if (sh.spinType === 'S') {
-        cx += sh.spinDir * Math.sin(t * Math.PI * 2) * 0.12;
-      } else if (sh.spinType === 'C') {
-        cx += sh.spinDir * Math.sin(t * Math.PI) * 0.15;
-      }
-      cx = Math.max(0.05, Math.min(0.95, cx));
       return { cx, cy, z: Math.max(0, z) };
     }
 
@@ -4275,9 +4432,7 @@
           uiNeedsSync = true;
         }
       }
-      if (uiNeedsSync && Math.random() < 0.25) {
-        updateAllUI();
-      }
+      // 避免在 60FPS 物理循环内频繁重建 DOM，防止长时间游玩卡顿
 
       SoundEngine.tickBgm(dtMs);
 
@@ -4588,61 +4743,39 @@
       const camTy = Math.round((h * 0.5 - focusScreen.y * zoom) * dpr);
       ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, camTx, camTy);
 
-      // 1. 赛场超清深色背景（移除会导致全屏发蒙掉帧的 ctx.filter 模糊）
+      // 1. 最搭配绿色的专业场馆深海蓝青背景色（护眼且让纯白羽毛球与翠绿球场对比最鲜明）
       ctx.save();
-      const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.42, 20, w * 0.5, h * 0.5, Math.max(w, h) * 0.78);
-      bgGrad.addColorStop(0, '#271046');
-      bgGrad.addColorStop(0.55, '#1a0b2e');
-      bgGrad.addColorStop(1, '#000000');
+      const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.45, 30, w * 0.5, h * 0.5, Math.max(w, h) * 0.82);
+      bgGrad.addColorStop(0, '#0f2942');
+      bgGrad.addColorStop(0.55, '#091929');
+      bgGrad.addColorStop(1, '#040b14');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, w, h);
-
-      // 1.5 Task 4: Floating Underworld Ash & Golden Dust Particles Around Court (Zero Memory Leak)
-      ctx.save();
-      for (let i = 0; i < GameState.ambientAsh.length; i++) {
-        const ash = GameState.ambientAsh[i];
-        ash.y += ash.vy * frameFactor;
-        ash.x += (ash.vx + Math.sin(now * 0.0015 + ash.phase) * 0.00025) * frameFactor;
-        if (ash.y < -0.04) ash.y = 1.04;
-        if (ash.x < -0.04) ash.x = 1.04;
-        if (ash.x > 1.04) ash.x = -0.04;
-
-        const ax = ash.x * w;
-        const ay = ash.y * h;
-        ctx.globalAlpha = ash.alpha * (0.65 + 0.35 * Math.sin(now * 0.003 + ash.phase));
-        ctx.fillStyle = ash.isGold ? '#f59e0b' : '#6b21a8';
-        ctx.beginPath();
-        ctx.arc(ax, ay, ash.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
       ctx.restore();
 
-      ctx.restore();
-
-      // 2. 2.5D Court with Dynamic Camera Motion Blur (当球高速飞出瞬间对背景场地施加轻微动态模糊)
+      // 2. 国际羽联标准翠绿色塑胶球场地板 + 纯白清晰界线
       const tl = projectCourt(0, 0, w, h);
       const tr = projectCourt(1, 0, w, h);
       const br = projectCourt(1, 1, w, h);
       const bl = projectCourt(0, 1, w, h);
 
       ctx.save();
-      // 保持球场线条 100% 原生超清锐利，不使用任何会使画面发蒙的 ctx.filter 模糊
       ctx.beginPath();
       ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y);
       ctx.closePath();
       const courtGrad = ctx.createLinearGradient(0, tl.y, 0, bl.y);
-      courtGrad.addColorStop(0, '#160a28');
-      courtGrad.addColorStop(0.5, '#1f0e38');
-      courtGrad.addColorStop(1, '#120722');
+      courtGrad.addColorStop(0, '#15803d');
+      courtGrad.addColorStop(0.5, '#16a34a');
+      courtGrad.addColorStop(1, '#14532d');
       ctx.fillStyle = courtGrad;
       ctx.fill();
 
-      // Thick black outer outline + gold inner border
+      // 球场深色外框衬底
       ctx.lineWidth = 6;
-      ctx.strokeStyle = '#0f0f0f';
+      ctx.strokeStyle = '#062c19';
       ctx.stroke();
 
-      // 9-Grid Zone Highlight under Player
+      // 玩家所在区域柔和亮绿光晕
       const pCol = GameState.pGridIdx % 3;
       const pRow = Math.floor(GameState.pGridIdx / 3);
       const gx0 = 0.06 + pCol * (0.88 / 3);
@@ -4653,22 +4786,22 @@
       const z2 = projectCourt(gx1, gy0, w, h);
       const z3 = projectCourt(gx1, gy1, w, h);
       const z4 = projectCourt(gx0, gy1, w, h);
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.14)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.09)';
       ctx.beginPath();
       ctx.moveTo(z1.x, z1.y); ctx.lineTo(z2.x, z2.y); ctx.lineTo(z3.x, z3.y); ctx.lineTo(z4.x, z4.y);
       ctx.closePath();
       ctx.fill();
 
-      // Doubles Sidelines & Baselines in Gold
+      // 双打外边线与底线（纯白清晰标准线）
       ctx.lineWidth = 2.6;
-      ctx.strokeStyle = '#f59e0b';
+      ctx.strokeStyle = '#ffffff';
       ctx.beginPath();
       ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y);
       ctx.closePath();
       ctx.stroke();
 
-      // Singles Sidelines (x = 0.06 and x = 0.94)
-      ctx.strokeStyle = 'rgba(251, 191, 36, 0.72)';
+      // 单打内边线 (x = 0.06 and x = 0.94)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
       ctx.lineWidth = 2.0;
       [0.06, 0.94].forEach(sx => {
         const pTop = projectCourt(sx, 0, w, h);
@@ -4679,9 +4812,9 @@
         ctx.stroke();
       });
 
-      // Doubles Long Service Lines
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
-      ctx.lineWidth = 1.4;
+      // 双打后发球线
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.lineWidth = 1.5;
       [0.06, 0.94].forEach(ly => {
         const pL = projectCourt(0, ly, w, h);
         const pR = projectCourt(1, ly, w, h);
@@ -4691,9 +4824,9 @@
         ctx.stroke();
       });
 
-      // Center Service Line
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.68)';
-      ctx.lineWidth = 1.9;
+      // 中线
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
+      ctx.lineWidth = 2.0;
       const cTop0 = projectCourt(0.5, 0, w, h);
       const cTop1 = projectCourt(0.5, 0.38, w, h);
       ctx.beginPath(); ctx.moveTo(cTop0.x, cTop0.y); ctx.lineTo(cTop1.x, cTop1.y); ctx.stroke();
@@ -4702,17 +4835,17 @@
       const cBot1 = projectCourt(0.5, 1.0, w, h);
       ctx.beginPath(); ctx.moveTo(cBot0.x, cBot0.y); ctx.lineTo(cBot1.x, cBot1.y); ctx.stroke();
 
-      // Front Service Lines
+      // 前发球线
       const fsAiL = projectCourt(0, 0.38, w, h);
       const fsAiR = projectCourt(1, 0.38, w, h);
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.75)';
-      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.88)';
+      ctx.lineWidth = 2.2;
       ctx.beginPath(); ctx.moveTo(fsAiL.x, fsAiL.y); ctx.lineTo(fsAiR.x, fsAiR.y); ctx.stroke();
 
       const fsPlL = projectCourt(0, 0.62, w, h);
       const fsPlR = projectCourt(1, 0.62, w, h);
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 3.2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.6;
       ctx.beginPath(); ctx.moveTo(fsPlL.x, fsPlL.y); ctx.lineTo(fsPlR.x, fsPlR.y); ctx.stroke();
 
       // 【策略任务一·4：3D球场地板标出 AI 无法及时跑到的“绝对空当”光圈】
@@ -4814,8 +4947,8 @@
         ctx.restore();
       }
 
-      // AI Action Telegraph (危 / 软球破绽)
-      if (GameState.aiDrawCard && GameState.aiDrawCard.life > 0) {
+      // AI 球路已改为涂鸦旁白展示，不再在人物头顶写字
+      if (false && GameState.aiDrawCard && GameState.aiDrawCard.life > 0) {
         const card = GameState.aiDrawCard;
         ctx.save();
         ctx.globalAlpha = Math.min(1, card.life * 1.25);
@@ -5035,31 +5168,9 @@
           sh.spinAngle += sh.spinSpeed * effFactor;
         }
 
-        const trailMaxLen = sh.trajType === 'smash' ? 22 : 15;
+        const trailMaxLen = 16;
         sh.trail.push({ x: groundPt.x, y: airY, r: shuttleRadius });
         if (sh.trail.length > trailMaxLen) sh.trail.shift();
-
-        // 2. 【高质感轨迹粒子生成 (Glow + Particle Dissipation)】：高画质上限 60，流畅模式降为 20
-        const maxTrailCap = GameState.qualityMode === 'smooth' ? 20 : 60;
-        while (GameState.trailParticles.length >= maxTrailCap) {
-          GameState.trailParticles.shift();
-        }
-        const tpColor = sh.trajType === 'smash' ? '#f43f5e' : (sh.trajType === 'high' ? '#2dd4bf' : '#c084fc');
-        GameState.trailParticles.push({
-          x: groundPt.x + (Math.random() - 0.5) * 6,
-          y: airY + (Math.random() - 0.5) * 6,
-          vx: (Math.random() - 0.5) * (sh.trajType === 'high' ? 1.4 : 0.6),
-          vy: sh.trajType === 'drop' ? (0.8 + Math.random() * 0.8) : ((Math.random() - 0.5) * 0.9),
-          size: sh.trajType === 'smash' ? 3.2 : 2.5,
-          color: tpColor,
-          isFeather: sh.trajType === 'high',
-          life: 1.0
-        });
-
-        if (sh.trajType === 'smash') {
-          sh.ghosts.push({ x: groundPt.x, y: airY, r: shuttleRadius });
-          if (sh.ghosts.length > 9) sh.ghosts.shift();
-        }
 
         ctx.save();
         // Ground Shadow
@@ -5068,123 +5179,58 @@
         ctx.ellipse(groundPt.x, groundPt.y, shadowRx, shadowRy, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Multi-Layer Glow Ribbon Trail (多层光晕轨迹)
+        // 彩色渐变流光拖尾轨迹（平滑顺畅、无螺旋抖动、零 shadowBlur 卡顿）
         if (sh.trail.length >= 2) {
-          const glowCol = sh.spinType ? '#38bdf8' : (sh.trajType === 'smash' ? '#ef4444' : (sh.trajType === 'high' ? '#10b981' : '#c084fc'));
           ctx.save();
-          ctx.shadowColor = glowCol;
-          ctx.shadowBlur = GameState.qualityMode === 'smooth' ? 0 : (sh.trajType === 'smash' ? 16 : 10);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          const palette = ['#a855f7', '#3b82f6', '#06b6d4', '#10b981', '#facc15', '#f43f5e', '#ffffff'];
           for (let i = 1; i < sh.trail.length; i++) {
-            const tRatio = i / sh.trail.length;
+            const tRatio = i / (sh.trail.length - 1);
             const p0 = sh.trail[i - 1];
             const p1 = sh.trail[i];
-            const spiralOffset = sh.spinType ? Math.sin(i * 1.35 + now * 0.025) * 6.5 * (1 - tRatio * 0.3) : 0;
-            const dropArc = sh.trajType === 'drop' ? Math.sin(tRatio * Math.PI) * 3.5 : 0;
+            const cIdx = Math.min(palette.length - 1, Math.floor(tRatio * (palette.length - 1)));
 
-            // Outer Glow Layer
             ctx.beginPath();
-            ctx.moveTo(p0.x + spiralOffset, p0.y + dropArc);
-            ctx.lineTo(p1.x - spiralOffset, p1.y + dropArc);
-            ctx.strokeStyle = glowCol;
-            ctx.globalAlpha = tRatio * 0.55;
-            ctx.lineWidth = (sh.trajType === 'smash' ? 13.0 : 8.0) * tRatio;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Inner Sharp Core Layer
-            ctx.beginPath();
-            ctx.moveTo(p0.x + spiralOffset * 0.5, p0.y + dropArc);
-            ctx.lineTo(p1.x - spiralOffset * 0.5, p1.y + dropArc);
-            ctx.strokeStyle = '#ffffff';
-            ctx.globalAlpha = tRatio * 0.85;
-            ctx.lineWidth = (sh.trajType === 'smash' ? 4.2 : 2.4) * tRatio;
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.strokeStyle = palette[cIdx];
+            ctx.globalAlpha = Math.pow(tRatio, 1.2) * 0.82;
+            ctx.lineWidth = (sh.trajType === 'smash' ? 10.5 : 7.5) * tRatio;
             ctx.stroke();
           }
           ctx.restore();
         }
 
-        // 3 Smash Afterimages
-        if (sh.trajType === 'smash' && sh.ghosts.length >= 3) {
-          const ghostAlphaLevels = [0.60, 0.36, 0.16];
-          for (let g = 0; g < 3; g++) {
-            const idx = Math.max(0, sh.ghosts.length - 1 - (g + 1) * 2);
-            const gp = sh.ghosts[idx];
-            if (gp) {
-              ctx.save();
-              ctx.globalAlpha = ghostAlphaLevels[g];
-              ctx.beginPath();
-              ctx.arc(gp.x, gp.y, gp.r * (0.90 - g * 0.12), 0, Math.PI * 2);
-              ctx.fillStyle = '#f43f5e';
-              ctx.fill();
-              ctx.restore();
-            }
-          }
-        }
-
-        // Pseudo-3D Rotating Shuttlecock + Shockwave Mach Cone + Impact Squash Deformation
+        // 纯白色真实羽毛球 (Pure White Shuttlecock)
         const prevGround = projectCourt(prevX, prevY, w, h);
         const prevAirY = prevGround.y - sh.z * h * 0.58;
         const flightAngle = Math.atan2(airY - prevAirY, groundPt.x - prevGround.x) || (sh.targetY > sh.startY ? Math.PI / 2 : -Math.PI / 2);
 
         ctx.save();
         ctx.translate(groundPt.x, airY);
+        ctx.rotate(flightAngle);
 
-        // 3. 【空气扰动视觉：音爆锥 (Shockwave Mach Cone)】：当球速极快(如杀球)时在球头正前方绘制半透明白色音爆锥
-        if (sh.trajType === 'smash' || sh.speed >= 0.052) {
-          ctx.save();
-          ctx.rotate(flightAngle);
-          const coneGrad = ctx.createLinearGradient(shuttleRadius * 1.8, 0, -shuttleRadius * 2.2, 0);
-          coneGrad.addColorStop(0, 'rgba(255, 255, 255, 0.78)');
-          coneGrad.addColorStop(0.45, 'rgba(254, 240, 138, 0.32)');
-          coneGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-          ctx.fillStyle = coneGrad;
-          ctx.beginPath();
-          ctx.moveTo(shuttleRadius * 1.9, 0);
-          ctx.quadraticCurveTo(0, -shuttleRadius * 2.1, -shuttleRadius * 2.4, -shuttleRadius * 2.8);
-          ctx.lineTo(-shuttleRadius * 1.6, 0);
-          ctx.lineTo(-shuttleRadius * 2.4, shuttleRadius * 2.8);
-          ctx.quadraticCurveTo(0, shuttleRadius * 2.1, shuttleRadius * 1.9, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.restore();
-        }
-
-        // Apply 2D Pseudo-3D Spin Rotation & Racket-Shuttle Squash Deformation
-        // 杀球/平抽球头朝向飞行下方/前方且剧烈旋转；高远球在顶点偏转、下落时球头朝下
-        const headOrient = (sh.trajType === 'smash' || sh.progress > 0.55)
-          ? (flightAngle + Math.sin(sh.spinAngle) * 0.22)
-          : (flightAngle + sh.spinAngle);
-        ctx.rotate(headOrient);
-
-        // 【球拍与球的交互形变】：击球特写初段绘制羽毛球被拍线“压扁”的椭圆微小形变
-        if (sh.squashTimer > 0 && GameState.camState.zoom > 1.08) {
-          ctx.scale(0.64, 1.38);
-        }
-
-        // Conical Feather Skirt (羽毛裙锥形开口朝向飞行反方向 -X)
+        // 纯白羽毛裙 (Pure White Feather Skirt)
         ctx.beginPath();
         ctx.moveTo(0, -shuttleRadius * 0.55);
-        ctx.lineTo(-shuttleRadius * 2.1, -shuttleRadius * 1.25);
-        ctx.lineTo(-shuttleRadius * 1.75, 0);
-        ctx.lineTo(-shuttleRadius * 2.1, shuttleRadius * 1.25);
+        ctx.lineTo(-shuttleRadius * 2.1, -shuttleRadius * 1.22);
+        ctx.lineTo(-shuttleRadius * 1.78, 0);
+        ctx.lineTo(-shuttleRadius * 2.1, shuttleRadius * 1.22);
         ctx.lineTo(0, shuttleRadius * 0.55);
         ctx.closePath();
-        ctx.fillStyle = 'rgba(248, 250, 252, 0.92)';
+        ctx.fillStyle = '#ffffff';
         ctx.fill();
-        ctx.lineWidth = 2.5;
-        ctx.strokeStyle = '#0f0f0f';
+        ctx.lineWidth = 2.0;
+        ctx.strokeStyle = '#1e293b';
         ctx.stroke();
 
-        // Cork Head (球头)
-        const shGrad = ctx.createRadialGradient(2, -1, 1, 2, 0, shuttleRadius);
-        shGrad.addColorStop(0, '#ffffff');
-        shGrad.addColorStop(0.6, '#fef08a');
-        shGrad.addColorStop(1, sh.trajType === 'smash' ? '#f43f5e' : '#f59e0b');
-        ctx.fillStyle = shGrad;
-        ctx.strokeStyle = '#0f0f0f';
-        ctx.lineWidth = 3.5;
+        // 纯白软木球头 (Pure White Cork Head)
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.4;
         ctx.beginPath();
-        ctx.arc(shuttleRadius * 0.35, 0, shuttleRadius * 0.85, 0, Math.PI * 2);
+        ctx.arc(shuttleRadius * 0.35, 0, shuttleRadius * 0.82, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -5335,14 +5381,57 @@
         ctx.globalAlpha = Math.max(0, ir.life);
         ctx.strokeStyle = ir.color;
         ctx.lineWidth = ir.width * ir.life;
-        ctx.shadowColor = ir.color;
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(proj.x, proj.y - 18, curR, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
         ir.life -= 0.065 * frameFactor;
         if (ir.life <= 0) GameState.impactRings.splice(i, 1);
+      }
+
+      // 涂鸦旁白 (Graffiti Callouts)：击球球路作为街头涂鸦风格旁白出现并渐变消失
+      for (let i = GameState.graffitiCallouts.length - 1; i >= 0; i--) {
+        const gf = GameState.graffitiCallouts[i];
+        const proj = projectCourt(gf.x, gf.y, w, h);
+        const popScale = gf.life > 0.82 ? (1.0 + (gf.life - 0.82) * 2.2) : 1.0;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, gf.life * 1.35));
+        ctx.translate(proj.x, proj.y - (1 - gf.life) * 22);
+        ctx.rotate(gf.tilt);
+        ctx.scale(popScale, popScale);
+
+        ctx.font = 'italic 900 17px "Noto Sans SC", "Inter", sans-serif';
+        const textW = ctx.measureText(gf.text).width;
+        const padX = 14;
+        const boxW = textW + padX * 2;
+        const boxH = 30;
+
+        // 涂鸦斜切喷漆底板
+        ctx.fillStyle = gf.bg;
+        ctx.strokeStyle = gf.border;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(-boxW * 0.5 + 6, -boxH * 0.5);
+        ctx.lineTo(boxW * 0.5 + 4, -boxH * 0.5 - 2);
+        ctx.lineTo(boxW * 0.5 - 6, boxH * 0.5);
+        ctx.lineTo(-boxW * 0.5 - 4, boxH * 0.5 + 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 涂鸦粗黑描边与亮色字体
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeStyle = '#090d16';
+        ctx.lineWidth = 4.5;
+        ctx.strokeText(gf.text, 0, 1);
+        ctx.fillStyle = gf.color;
+        ctx.fillText(gf.text, 0, 1);
+        ctx.restore();
+
+        gf.life -= 0.022 * frameFactor;
+        if (gf.life <= 0) GameState.graffitiCallouts.splice(i, 1);
       }
 
       // Floating Combat Texts
@@ -6150,51 +6239,7 @@
       ctx.strokeStyle = '#0f0f0f';
       ctx.stroke();
 
-      // 头顶状态提示文字
-      if (opts.postureZero) {
-        ctx.font = 'italic 900 12px "Noto Serif SC", serif';
-        ctx.strokeStyle = '#0f0f0f';
-        ctx.lineWidth = 4;
-        ctx.textAlign = 'center';
-        ctx.strokeText('💫 【重心崩溃】 2.0s!', 0, hy - 20);
-        ctx.fillStyle = '#fde047';
-        ctx.fillText('💫 【重心崩溃】 2.0s!', 0, hy - 20);
-      } else if (!opts.isPlayer && GameState.aiStaggerTimer > 0) {
-        ctx.font = 'italic 900 12px "Noto Serif SC", serif';
-        ctx.strokeStyle = '#0f0f0f';
-        ctx.lineWidth = 4;
-        ctx.textAlign = 'center';
-        ctx.strokeText('⚡ 战术压制·踉跄!', 0, hy - 20);
-        ctx.fillStyle = '#fde047';
-        ctx.fillText('⚡ 战术压制·踉跄!', 0, hy - 20);
-      } else if (opts.isPlayer && GameState.playerRecoveryTimer > 0) {
-        ctx.font = 'italic 900 11px "Noto Serif SC", serif';
-        ctx.strokeStyle = '#0f0f0f';
-        ctx.lineWidth = 4;
-        ctx.textAlign = 'center';
-        const recMsg = isInSmashRecovery ? '⚠️ 后摇破绽! (深蹲0.4s)' : '⚠️ 后摇破绽! (前冲惯性0.2s)';
-        ctx.strokeText(recMsg, 0, hy - 20);
-        ctx.fillStyle = '#facc15';
-        ctx.fillText(recMsg, 0, hy - 20);
-      } else if (isTurnStun) {
-        ctx.font = 'italic 900 10px "Noto Serif SC", serif';
-        ctx.fillStyle = '#38bdf8';
-        ctx.textAlign = 'center';
-        ctx.fillText('👟 急停转身 0.15s', 0, hy - 19);
-      } else if (opts.isPlayer) {
-        const sym = GameState.cogSymbol || '0';
-        const symCol = GameState.cogImbalanced ? '#f43f5e' : (sym === '+' ? '#fbbf24' : (sym === '-' ? '#38bdf8' : '#34d399'));
-        ctx.font = '900 11px "Noto Sans SC", sans-serif';
-        ctx.strokeStyle = '#0f0f0f';
-        ctx.lineWidth = 3.5;
-        ctx.textAlign = 'center';
-        const badgeTxt = GameState.cogImbalanced
-          ? `⚠️失衡[${sym}] (慢0.5s) · ${GameState.lastRacketActionText}`
-          : `重心[${sym}] · ${GameState.lastRacketActionText}`;
-        ctx.strokeText(badgeTxt, 0, hy - 20);
-        ctx.fillStyle = symCol;
-        ctx.fillText(badgeTxt, 0, hy - 20);
-      }
+      // 人物头顶保持纯净，不显示重心或球路文字（重心在后台运行，球路以涂鸦旁白展示）
 
       ctx.restore();
     }
@@ -6403,10 +6448,12 @@
         const dir = btn.dataset.dir;
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
-          if (GameState.phase === 'ai_incoming') {
+          e.stopPropagation();
+          // 每一拍间隔仅允许在 ai_incoming 阶段选择 1 次步伐，严禁连点！
+          if (GameState.phase === 'ai_incoming' && !GameState.stepUsedThisTurn) {
             handleSensoryFootworkSelect(dir);
-            return;
           }
+          return;
           const nowMs = performance.now();
           // 双击同一方向键触发 2.0x 爆发冲刺 (Dash)
           if (!activeDirs.has(dir) && lastDpadDir === dir && (nowMs - lastDpadTapTime) <= 240 && GameState.pStamina >= 12) {
@@ -6589,6 +6636,23 @@
       });
 
       document.getElementById('btnPause').addEventListener('click', openPauseModal);
+      const topMenuBtn = document.getElementById('topBarMenuBtn');
+      if (topMenuBtn) topMenuBtn.addEventListener('click', openPauseModal);
+      const topStageBtn = document.getElementById('topBarStageBtn');
+      if (topStageBtn) topStageBtn.addEventListener('click', openMapModal);
+      const topTutBtn = document.getElementById('topBarTutorialBtn');
+      if (topTutBtn) {
+        topTutBtn.addEventListener('click', () => {
+          if (GameState.tutorialActive && GameState.tutorialStep > 0) {
+            GameState.tutorialActive = false;
+            GameState.tutorialStep = 0;
+          } else {
+            GameState.tutorialActive = true;
+            GameState.tutorialStep = 1;
+          }
+          updateAllUI();
+        });
+      }
       document.getElementById('btnWxMore').addEventListener('click', openIntelModal);
       document.getElementById('btnWxRestartQuick').addEventListener('click', () => initStage(GameState.stageIdx));
       document.getElementById('btnQuickRestartNode').addEventListener('click', () => initStage(GameState.stageIdx));
