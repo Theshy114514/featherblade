@@ -921,10 +921,8 @@
         if (this.vibMode === 0) return;
         const root = document.getElementById('gameRoot');
         const flash = document.getElementById('screenFlash');
-        if (flash && flashColor) {
-          flash.style.background = flashColor;
-          flash.style.opacity = this.vibMode === 2 ? '1' : '0.45';
-          scheduleAction(120, () => { flash.style.opacity = '0'; }, 'screenFlashFade');
+        if (flash) {
+          flash.style.opacity = '0'; // 彻底禁用全屏红闪遮罩，杜绝clearActionTimers导致卡红屏Bug
         }
         let cssClass = 'shake-light';
         if (level === 'heavy' || level === 'heavy_smash') {
@@ -1677,6 +1675,7 @@
     // ==================== 7. STAGE INITIALIZATION & HUD SYNC ====================
     function initStage(stageIdx) {
       clearActionTimers();
+      const sf = document.getElementById('screenFlash'); if (sf) sf.style.opacity = '0';
       GameState.stageIdx = Math.max(0, Math.min(STAGES.length - 1, stageIdx));
       const st = getCurrentStage();
       const hero = getCurrentHero();
@@ -3489,6 +3488,7 @@
     function scorePoint(winner, reasonText) {
       SoundEngine.playRefereeWhistle();
       clearActionTimers();
+      const sf = document.getElementById('screenFlash'); if (sf) sf.style.opacity = '0';
       GameState.timeScale = 1.0;
       GameState.timeScaleTimer = 0;
       GameState.swingLock = false;
@@ -4900,70 +4900,14 @@
           const threatR = inc.threatPx || (inc.isSmash ? 26 : 42);
           const ringColor = inc.isSoftBall ? '#fbbf24' : (inc.isSmash ? '#f43f5e' : '#f59e0b');
 
-          // Outer spatial reach zone ellipse
+          // 极简落点光圈指示（预示对手来球落点，指引玩家在下方九宫格选择对应步伐）
           ctx.beginPath();
-          ctx.ellipse(tPt.x, tPt.y, threatR * 1.15, threatR * 0.58, 0, 0, Math.PI * 2);
-          ctx.fillStyle = inReach
-            ? 'rgba(245, 158, 11, 0.25)'
-            : 'rgba(244, 63, 94, 0.22)';
+          ctx.ellipse(tPt.x, tPt.y, 22 * tPt.scale, 10 * tPt.scale, 0, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(251, 191, 36, 0.22)";
           ctx.fill();
-          ctx.lineWidth = 4;
-          ctx.strokeStyle = '#0f0f0f';
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = "#fde047";
           ctx.stroke();
-          ctx.lineWidth = inReach ? 2.5 : 2.0;
-          ctx.strokeStyle = inReach ? '#fbbf24' : ringColor;
-          ctx.stroke();
-
-          // Fixed Golden Perfect Anchor Inner Ring
-          const perfectAnchorR = Math.max(11, threatR * 0.48);
-          ctx.beginPath();
-          ctx.arc(tPt.x, tPt.y - 6, perfectAnchorR, 0, Math.PI * 2);
-          ctx.strokeStyle = isPerfectWindowNow ? '#ffffff' : 'rgba(251, 191, 36, 0.85)';
-          ctx.lineWidth = isPerfectWindowNow ? 5.0 : 2.4;
-          if (isPerfectWindowNow) {
-            ctx.shadowColor = '#fde047';
-            ctx.shadowBlur = 0;
-          }
-          ctx.stroke();
-          ctx.shadowBlur = 0;
-
-          // High-Speed Shrinking QTE Ring (Expedition 33 style)
-          const shrinkR = Math.max(6, perfectAnchorR + Math.max(-0.18, ratio) * threatR * 1.45);
-          ctx.beginPath();
-          ctx.arc(tPt.x, tPt.y - 6, shrinkR, 0, Math.PI * 2);
-          ctx.strokeStyle = '#0f0f0f';
-          ctx.lineWidth = 6.0;
-          ctx.stroke();
-          ctx.strokeStyle = isPerfectWindowNow ? '#fde047' : ringColor;
-          ctx.lineWidth = isPerfectWindowNow ? 3.8 : 2.6;
-          ctx.stroke();
-
-          if (!inReach) {
-            ctx.setLineDash([4, 4]);
-            ctx.strokeStyle = 'rgba(251, 191, 36, 0.82)';
-            ctx.lineWidth = 2.0;
-            ctx.beginPath();
-            ctx.moveTo(pPt.x, pPt.y - 10);
-            ctx.lineTo(tPt.x, tPt.y - 6);
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
-
-          ctx.fillStyle = isPerfectWindowNow ? '#fde047' : (inReach ? '#fef08a' : '#fda4af');
-          ctx.font = 'italic 900 11px "Noto Serif SC", serif';
-          ctx.textAlign = 'center';
-          ctx.shadowColor = '#000';
-          ctx.shadowBlur = 0;
-          const needRight = (inc.targetX - GameState.playerVisual.x) >= -0.02;
-          const handHint = needRight ? '👉右推【正手接杀】' : '👈左推【反手接杀(窗口-20%)】';
-          const zGateHint = GameState.shuttle.z >= 0.30 ? ` [高空Z=${GameState.shuttle.z.toFixed(2)}待下落]` : '';
-          ctx.fillText(
-            inc.isSoftBall
-              ? '⚡ 软球破绽! 按【中国跳/马来步】或缩圈完美弹反!'
-              : (inReach ? (isPerfectWindowNow ? `⚔️ ${handHint} · 完美弹反瞬间!` : `🛡️ ${handHint}${zGateHint}`) : `🏃 跑进圈 + ${handHint}!`),
-            tPt.x,
-            tPt.y - threatR - 14
-          );
           ctx.restore();
         }
       }
@@ -5441,7 +5385,7 @@
       }
 
       // 11. Task 4: Blood-Red Breathing Vignette when AI Posture Overflows (>= 85 or 【重心崩溃】)
-      if (GameState.aiPosture >= 85 || GameState.phase === 'break_finisher' || GameState.playerPosture >= 85) {
+      if (false && (GameState.aiPosture >= 85 || GameState.phase === 'break_finisher' || GameState.playerPosture >= 85)) {
         ctx.save();
         const pulse = 0.42 + 0.28 * Math.sin(now * 0.010);
         const vigGrad = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.28, w * 0.5, h * 0.5, Math.max(w, h) * 0.72);
