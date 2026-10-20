@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="羽刃" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <title>《羽刃》Featherblade v7.0 — 八向步伐与3D Q版真实骨骼重构版</title>
+  <meta name="theme-color" content="#0d0618" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' rx='28' fill='%231a0b2e' stroke='%23f59e0b' stroke-width='6'/><text x='64' y='86' font-size='72' text-anchor='middle'>🏸</text></svg>" />
+  <link rel="manifest" href='data:application/manifest+json,{"name":"《羽刃》Featherblade","short_name":"羽刃","start_url":".","display":"fullscreen","orientation":"portrait","background_color":"#0d0618","theme_color":"#0d0618","icons":[{"src":"data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 128 128%27><rect width=%27128%27 height=%27128%27 rx=%2728%27 fill=%27%231a0b2e%27/><text x=%2764%27 y=%2786%27 font-size=%2772%27 text-anchor=%27middle%27>🏸</text></svg>","sizes":"128x128","type":"image/svg+xml"}]}' />
+  <title>《羽刃》Featherblade — 极简竖屏单手版</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,23 +32,23 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+       position: fixed;
+      inset: 0;
       overflow: hidden;
-      background: radial-gradient(circle at 50% 35%, #1a0b2e 0%, #0d0518 55%, #000000 100%);
-      font-family: 'Cinzel', 'Noto Serif SC', Georgia, serif;
+      background: #0d0618;
+      font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
       font-weight: 700;
-      font-style: italic;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
       color: #fef3c7;
       touch-action: none;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
     .hades-panel {
       background: linear-gradient(145deg, rgba(16, 9, 28, 0.92), rgba(7, 4, 14, 0.96));
       border: 2.5px solid #f59e0b;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
       box-shadow:
         0 10px 28px rgba(0, 0, 0, 0.85),
         inset 0 0 22px rgba(245, 158, 11, 0.16),
@@ -75,9 +79,9 @@
       55% { transform: translate(-11px, -8px) rotate(-0.8deg) scale(1.012); }
       75% { transform: translate(9px, 7px) rotate(0.6deg) scale(0.994); }
     }
-    .shake-light { animation: shake-light 0.16s cubic-bezier(.36,.07,.19,.97) both; }
-    .shake-heavy { animation: shake-heavy 0.28s cubic-bezier(.36,.07,.19,.97) both; }
-    .shake-extreme { animation: shake-extreme 0.44s cubic-bezier(.36,.07,.19,.97) both; }
+    .shake-light { animation: shake-light 0.14s cubic-bezier(.36,.07,.19,.97); }
+    .shake-heavy { animation: shake-heavy 0.22s cubic-bezier(.36,.07,.19,.97); }
+    .shake-extreme { animation: shake-extreme 0.32s cubic-bezier(.36,.07,.19,.97); }
 
     @keyframes pulse-gold {
       0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.75), inset 0 0 12px rgba(245, 158, 11, 0.4); }
@@ -142,67 +146,99 @@
       transition: transform 0.08s ease, filter 0.1s ease, opacity 0.12s ease;
       touch-action: none;
       border-width: 2px;
-      backdrop-filter: blur(8px);
       box-shadow: inset 0 0 14px rgba(245, 158, 11, 0.14), 0 4px 12px rgba(0, 0, 0, 0.65);
     }
     .shot-btn:active:not(:disabled) {
       transform: scale(0.95);
     }
-    /* 八向步伐键盘 (8-Way Footwork D-Pad) 样式 */
+    /* 竖屏单手大拇指热区 (屏幕中下方 H * 0.72 你的半场：3x3八向步伐盘 -> 原地切换 2x2 大球路按钮) */
     .dpad-container {
-      width: 112px;
-      height: 102px;
+      width: min(310px, 84vw);
+      height: min(240px, 34dvh);
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 3px;
+      gap: 8px;
       position: relative;
-      z-index: 20;
+      z-index: 35;
       touch-action: none;
     }
+    .dpad-hidden {
+      display: none !important;
+      pointer-events: none !important;
+    }
+    .dpad-sensory-active {
+      display: grid !important;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .shot-wheel-container {
+      width: min(310px, 84vw);
+      height: min(220px, 32dvh);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 10px;
+      position: relative;
+      z-index: 35;
+      touch-action: none;
+      pointer-events: auto;
+    }
+    .dpad-btn.recommended-step {
+      border-color: #fde047 !important;
+      background: linear-gradient(145deg, rgba(245, 158, 11, 0.48), rgba(16, 185, 129, 0.38)) !important;
+      box-shadow: 0 0 20px rgba(251, 191, 36, 0.92), inset 0 0 12px rgba(254, 240, 138, 0.55) !important;
+    }
+    .dpad-btn.delayed-locked {
+      opacity: 0.38 !important;
+      filter: grayscale(0.85);
+      cursor: not-allowed !important;
+    }
     .dpad-btn {
-      background: linear-gradient(145deg, rgba(24, 12, 42, 0.92), rgba(10, 5, 20, 0.96));
-      border: 1.5px solid rgba(245, 158, 11, 0.52);
-      border-radius: 7px;
+      background: linear-gradient(145deg, rgba(20, 10, 36, 0.94), rgba(8, 4, 16, 0.98));
+      border: 2px solid rgba(245, 158, 11, 0.78);
+      border-radius: 14px;
       color: #fbbf24;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 13px;
-      line-height: 1;
+      font-size: clamp(13px, 2.2vh, 16px);
+      line-height: 1.1;
       cursor: pointer;
-      transition: all 0.08s ease;
-      box-shadow: inset 0 0 8px rgba(245, 158, 11, 0.15), 0 2px 6px rgba(0, 0, 0, 0.65);
+      padding: 4px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85), inset 0 0 12px rgba(245, 158, 11, 0.18);
     }
     .dpad-btn span.step-tag {
-      font-size: 7px;
+      font-size: clamp(9px, 1.5vh, 11px);
       color: #fde68a;
-      opacity: 0.85;
-      margin-top: 1px;
+      opacity: 0.95;
+      margin-top: 3px;
       font-style: normal;
       font-weight: 800;
     }
     .dpad-btn:active, .dpad-btn.active {
-      background: rgba(245, 158, 11, 0.36);
-      border-color: #fde047;
+      background: rgba(245, 158, 11, 0.48);
+      border-color: #ffffff;
       color: #ffffff;
-      transform: scale(0.91);
-      box-shadow: 0 0 14px rgba(245, 158, 11, 0.8), inset 0 0 10px rgba(254, 240, 138, 0.45);
+      transform: scale(0.93);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.95);
     }
     .dpad-center {
-      background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0.85) 100%);
-      border: 1px dashed rgba(245, 158, 11, 0.45);
-      border-radius: 7px;
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.24) 0%, rgba(15, 23, 42, 0.94) 100%);
+      border: 1.5px dashed rgba(245, 158, 11, 0.65);
+      border-radius: 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 8px;
+      font-size: 10px;
       color: #fef08a;
       text-align: center;
-      line-height: 1.05;
+      line-height: 1.15;
       pointer-events: none;
+      padding: 4px;
     }
   </style>
 </head>
@@ -222,215 +258,111 @@
       </button>
     </div>
 
-    <!-- ================= MODULE 1: INTEGRATED TOP HUD (v6.0 + v5.5 FUSION) ================= -->
-    <header class="w-full hades-panel border-b-2 border-amber-500 z-30 shrink-0 flex flex-col">
-      <!-- Top Row: Stage Info, 4D Attributes & Tactical Controls -->
-      <div class="w-full h-9 px-2.5 flex items-center justify-between border-b border-slate-900">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <div class="flex items-center gap-1 bg-emerald-500/15 border border-emerald-400/40 rounded-md px-2 py-0.5">
-            <span class="text-sm leading-none">🏸</span>
-            <span class="font-black tracking-tight text-xs bg-gradient-to-r from-emerald-300 via-cyan-200 to-amber-200 bg-clip-text text-transparent">羽刃 v7.0·骨骼IK</span>
-          </div>
-          <span id="headerChapterBadge" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 truncate">
-            第1章 1-1 · 校队新人·小林
-          </span>
-          <!-- 4D Attributes Pill (Power, Control, Sense) -->
-          <div id="headerAttrsPill" class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-bold">
-            <span class="text-rose-300" id="attrPowerText">💪力量:45</span>
-            <span class="text-cyan-300" id="attrControlText">🎯控球:40</span>
-            <span class="text-purple-300" id="attrSenseText">🪶球感:40</span>
-          </div>
-          <button id="btnSkipTutorial" type="button" class="px-2 py-0.5 rounded bg-emerald-900/70 hover:bg-emerald-800 text-[10px] font-bold text-emerald-200 border border-emerald-400/40 transition">
-            跳过引导
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1">
-          <button id="btnOpenMap" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-sky-300 border border-sky-500/30 flex items-center gap-1">
-            <span>🗺️</span><span class="hidden sm:inline">闯关地图</span>
-          </button>
-          <button id="btnOpenIntel" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-            <span>📋</span><span class="hidden sm:inline">Boss情报</span>
-          </button>
-          <button id="btnCycleVenue" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 hidden md:flex items-center gap-1">
-            <span>🏟️</span><span id="venueNameLabel">大师赛馆</span>
-          </button>
-          <button id="btnCycleDiff" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-            <span>🛡️</span><span id="diffLabel">新手保护</span>
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1">
-          <button id="btnToggleBgm" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700">
-            🎵 音乐:开
-          </button>
-          <button id="btnToggleQuality" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40" title="切换高画质与流畅模式">
-            ✨ 画质:高
-          </button>
-          <button id="btnToggleVib" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 hidden sm:inline-flex">
-            📳 震感:强烈
-          </button>
-          <button id="btnPause" type="button" class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40">
-            ⏸ 暂停
-          </button>
-          <div class="wx-capsule h-6 px-2 flex items-center gap-1.5 text-xs text-slate-200">
-            <button id="btnWxMore" type="button" class="hover:text-white font-bold leading-none" title="战术说明">•••</button>
-            <span class="w-px h-3 bg-slate-600"></span>
-            <button id="btnWxRestartQuick" type="button" class="hover:text-rose-400 leading-none" title="重开本局">◎</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Second Row: Integrated Live Combat HUD Strip (Player vs Tactical Combo Chain & Score vs Boss) -->
-      <div class="w-full px-2.5 py-1 grid grid-cols-12 items-center gap-2 bg-slate-900/90">
-        <!-- Player Integrated Status (4 cols) -->
-        <div class="col-span-4 flex flex-col gap-0.5">
-          <div class="flex items-center justify-between text-[11px]">
-            <div class="flex items-center gap-1 min-w-0">
-              <span class="font-black text-emerald-300 truncate" id="scorePlayerTag">我方·苏羽</span>
-              <button id="btnSwitchHero" type="button" class="text-[9px] px-1 rounded bg-slate-800 text-cyan-300 border border-cyan-500/30">换角</button>
-              <span id="playerPosBadge" class="text-[10px] font-extrabold text-cyan-300">📍后中(7)</span>
-            </div>
-            <div class="flex items-center gap-1 text-[10px] shrink-0">
-              <span id="hudCogLive" class="px-1 rounded bg-emerald-500/20 text-emerald-300 font-bold">⚖️重心85</span>
-              <span id="hudFocusMini" class="text-purple-300 font-bold hidden sm:inline">👁️90</span>
-              <span id="hudComboMini" class="px-1 rounded bg-amber-500/20 text-amber-300 font-black">×1.0</span>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-1.5">
-            <div class="flex items-center gap-1">
-              <span class="text-[9px] text-emerald-300 font-bold shrink-0">⚡体</span>
-              <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                <div id="hudPStamBar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-300 transition-all duration-100" style="width:100%"></div>
-              </div>
-              <span id="hudPStamText" class="text-[9px] font-mono text-emerald-300 w-6 text-right">100</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-[9px] text-cyan-300 font-bold shrink-0">🛡️破绽</span>
-              <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                <div id="hudPPosBar" class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-rose-600 transition-all duration-100" style="width:0%"></div>
-              </div>
-              <span id="hudPPosText" class="text-[9px] font-mono text-amber-300 w-8 text-right">0%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center Score & 3-Shot Tactical Chain (4 cols) -->
-        <div class="col-span-4 flex flex-col items-center justify-center">
-          <div class="flex items-center gap-2.5">
-            <span id="serveIconPlayer" class="text-xs" title="我方发球权">🏸</span>
-            <span id="scorePlayerNum" class="text-xl sm:text-2xl font-black text-white font-mono leading-none">0</span>
-            <div class="flex flex-col items-center">
-              <span id="matchRuleBadge" class="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-slate-800 text-amber-300 border border-amber-400/30">
-                7分制
-              </span>
-              <span id="rallyCountText" class="text-[9px] text-slate-400">第 0 拍</span>
-            </div>
-            <span id="scoreAiNum" class="text-xl sm:text-2xl font-black text-rose-400 font-mono leading-none">0</span>
-            <span id="serveIconAi" class="text-xs hidden" title="对手发球权">🏸</span>
-          </div>
-          <!-- Live 3-Shot Tactical Combo Chain Strip & Featherblade Boons Build -->
-          <div id="tacticalChainStrip" class="text-[10px] font-extrabold text-amber-300 truncate max-w-full mt-0.5">
-            🔗 战术树：高远→吊球→杀球 / 高远→放网→扑推
-          </div>
-          <div id="activeBoonsBar" class="flex items-center justify-center gap-1 flex-wrap max-w-full mt-0.5 text-[9px] text-amber-200">
-            <span class="px-1.5 py-0.2 rounded bg-amber-950/80 border border-amber-500/50 text-amber-300">🃏 战术流派: 暂无 (每得2分或胜场三选一)</span>
-          </div>
-        </div>
-
-        <!-- Opponent Integrated Status (4 cols) -->
-        <div class="col-span-4 flex flex-col gap-0.5">
-          <div class="flex items-center justify-between text-[11px]">
-            <div class="flex items-center gap-1 text-[10px]">
-              <span id="hudAiImmMini" class="text-amber-300 font-bold truncate">🚫免疫:无</span>
-              <button id="btnHawkEye" type="button" class="px-1 rounded bg-sky-500/20 text-sky-300 border border-sky-400/30 font-bold text-[9px]">
-                🦅 鹰眼 ×<span id="hawkEyeCount">2</span>
-              </button>
-            </div>
-            <span class="font-black text-rose-300 truncate" id="scoreAiTag">小林</span>
-          </div>
-          <div class="grid grid-cols-2 gap-1.5">
-            <div class="flex items-center gap-1">
-              <span class="text-[9px] text-rose-300 font-bold shrink-0">💥破绽</span>
-              <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden border border-rose-500/30">
-                <div id="hudAiPosBar" class="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-red-600 transition-all duration-100" style="width:0%"></div>
-              </div>
-              <span id="hudAiPosText" class="text-[9px] font-mono text-rose-300 w-8 text-right">0%</span>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-[9px] text-emerald-300 font-bold shrink-0">⚡体</span>
-              <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                <div id="hudAiStamBar" class="h-full bg-gradient-to-r from-emerald-500 to-lime-400 transition-all duration-100" style="width:100%"></div>
-              </div>
-              <span id="hudAiStamText" class="text-[9px] font-mono text-emerald-300 w-6 text-right">100</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- ================= CENTER 100% UNOBSTRUCTED 2.5D COURT CANVAS ================= -->
-    <main class="flex-1 min-h-0 w-full relative bg-transparent overflow-hidden flex items-center justify-center">
+    <!-- ================= 100% 纯净全屏纵向透视球场 (无顶部Header/无底部Footer · 单手竖屏中下方H*0.72原地双次判断) ================= -->
+    <main class="w-full h-full relative bg-transparent overflow-hidden flex items-center justify-center">
       <div id="canvasContainer" class="w-full h-full relative flex items-center justify-center overflow-hidden">
         <canvas id="courtCanvas" class="w-full h-full block"></canvas>
+
+        <!-- 【核心单手大拇指操作区】：固定在屏幕中下方（你的半场 H * 0.72），平时完全隐藏，只在AI击球瞬间弹出 3x3 步伐盘 -> 原地切换 2x2 球路按钮！ -->
+        <div id="centerFootworkOverlay" class="pointer-events-none absolute inset-x-0 bottom-[10dvh] sm:bottom-[12dvh] z-30 flex flex-col items-center justify-end px-3">
+          <!-- 简短状态与倒计时细条 -->
+          <div id="sensoryStepHeader" class="hidden mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-amber-400/90 text-xs font-black text-amber-200 shadow-xl flex flex-col items-center gap-1 max-w-[90vw]">
+            <div id="sensoryStepTitleText" class="truncate">⚡ 第一步：点击步伐方向</div>
+            <div class="w-44 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+              <div id="sensoryTimerBarFill" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-none" style="width: 100%"></div>
+            </div>
+          </div>
+
+          <!-- 【第一步：3×3 九宫格步伐盘】（大拇指热区 H * 0.72，点击后瞬间消失并自动滑步到位） -->
+          <div class="dpad-container dpad-hidden" id="dPad">
+            <div class="dpad-btn" data-dir="ul">
+              <span class="font-black text-lg">↖</span>
+              <span class="step-tag">左上网</span>
+            </div>
+            <div class="dpad-btn" data-dir="up">
+              <span class="font-black text-lg">↑</span>
+              <span class="step-tag">垫步上网</span>
+            </div>
+            <div class="dpad-btn" data-dir="ur">
+              <span class="font-black text-lg">↗</span>
+              <span class="step-tag">右上网</span>
+            </div>
+            <div class="dpad-btn" data-dir="left">
+              <span class="font-black text-lg">←</span>
+              <span class="step-tag">左滑步</span>
+            </div>
+            <div class="dpad-center" id="dpadFootworkLabel">
+              <span class="text-[10px] text-amber-300 font-bold" id="centerCogSymbolBadge">重心[0]</span>
+              <strong id="liveFootworkText" class="text-[10px] text-white mt-0.5">选步伐</strong>
+              <span id="sensoryCountdownText" class="text-[9px] text-cyan-300 font-mono">Perfect窗</span>
+            </div>
+            <div class="dpad-btn" data-dir="right">
+              <span class="font-black text-lg">→</span>
+              <span class="step-tag">右滑步</span>
+            </div>
+            <div class="dpad-btn" data-dir="dl">
+              <span class="font-black text-lg">↙</span>
+              <span class="step-tag">左后马来步</span>
+            </div>
+            <div class="dpad-btn" data-dir="down">
+              <span class="font-black text-lg">↓</span>
+              <span class="step-tag">并步后退</span>
+            </div>
+            <div class="dpad-btn" data-dir="dr">
+              <span class="font-black text-lg">↘</span>
+              <span class="step-tag">右后交叉步</span>
+            </div>
+          </div>
+
+          <!-- 【第二步：原地 2×2 大球路按钮】（大拇指无需移动，顺势点击想打的球路，点击后全部消失） -->
+          <div id="actionDeckContainer" class="shot-wheel-container hidden"></div>
+        </div>
       </div>
     </main>
 
-    <!-- ================= SEPARATED BOTTOM CONTROL BAR ================= -->
-    <!-- Left: Fixed 96x96 Virtual Joystick | Right: Fixed Grid Action Deck -->
-    <footer class="w-full h-28 sm:h-32 px-3 py-1.5 hades-panel border-t-2 border-amber-500 z-30 shrink-0 flex items-center gap-3">
-
-      <!-- 【核心升级】：取消左摇杆，替换为 8 向真实羽毛球步伐键盘 (D-Pad) -->
-      <div class="shrink-0 flex flex-col items-center justify-center">
-        <div class="dpad-container" id="dPad" title="点击或按住方向键触发真实8向羽毛球步伐（双击同方向可爆发冲刺）">
-          <div class="dpad-btn" data-dir="ul"><span>↖</span><span class="step-tag">左弓箭</span></div>
-          <div class="dpad-btn" data-dir="up"><span>↑</span><span class="step-tag">垫步网</span></div>
-          <div class="dpad-btn" data-dir="ur"><span>↗</span><span class="step-tag">右弓箭</span></div>
-          <div class="dpad-btn" data-dir="left"><span>←</span><span class="step-tag">左滑步</span></div>
-          <div class="dpad-center" id="dpadFootworkLabel">
-            <span class="text-[7px] text-amber-400/80">八向步伐</span>
-            <strong id="liveFootworkText" class="text-[8px] text-white">准备步</strong>
-          </div>
-          <div class="dpad-btn" data-dir="right"><span>→</span><span class="step-tag">右滑步</span></div>
-          <div class="dpad-btn" data-dir="dl"><span>↙</span><span class="step-tag">马来步</span></div>
-          <div class="dpad-btn" data-dir="down"><span>↓</span><span class="step-tag">交叉退</span></div>
-          <div class="dpad-btn" data-dir="dr"><span>↘</span><span class="step-tag">退跳步</span></div>
-        </div>
-      </div>
-
-      <!-- Bottom-Right Fixed Action Panel -->
-      <div class="flex-1 h-full flex flex-col justify-between min-w-0">
-        <!-- Top Status Strip of Action Deck -->
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span id="deckPhaseBadge" class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shrink-0">
-              🏸 发球阶段
-            </span>
-            <span id="deckPromptText" class="text-[11px] font-bold text-slate-200 truncate">
-              点击按钮直接出球，或按住上下滑动实时预览调节弧线！
-            </span>
-          </div>
-
-          <!-- QTE Timing Bar & Quick Focus Skills -->
-          <div class="flex items-center gap-1.5 shrink-0">
-            <div id="qteBarWrap" class="w-28 sm:w-36 h-2.5 bg-slate-800 rounded-full overflow-hidden border border-slate-600 relative hidden">
-              <div class="absolute inset-y-0 left-[65%] w-[18%] bg-amber-400/85 border-x border-white"></div>
-              <div id="qteBarCursor" class="h-full w-2 bg-cyan-300 rounded-full" style="margin-left: 0%"></div>
-            </div>
-            <button id="btnSkillSlowMo" type="button" class="px-2 py-0.5 rounded bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/40 text-[10px] font-bold text-cyan-200">
-              <span>⏱️ 极速慢放</span> <span class="font-mono">40</span>
-            </button>
-            <button id="btnSkillSteady" type="button" class="px-2 py-0.5 rounded bg-amber-950 hover:bg-amber-900 border border-amber-500/40 text-[10px] font-bold text-amber-200">
-              <span>🛡️ 稳心消破绽</span> <span class="font-mono">15</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Fixed Grid Buttons Container -->
-        <div id="actionDeckContainer" class="flex-1 grid grid-cols-3 sm:grid-cols-4 gap-2 pt-1 items-stretch">
-        </div>
-      </div>
-    </footer>
+    <!-- Hidden Legacy HUD/Footer Elements (Preserved off-screen so 0 bottom bar exists while keeping full DOM compatibility) -->
+    <div class="hidden" aria-hidden="true">
+            <span id="hudCogLive"></span>
+      <span id="scorePlayerTag">我方·苏羽</span>
+      <span id="serveIconPlayer">🏸</span>
+      <span id="scorePlayerNum">0</span>
+      <span id="rallyCountText">VS</span>
+      <span id="scoreAiNum">0</span>
+      <span id="serveIconAi">🏸</span>
+      <span id="scoreAiTag">小林</span>
+      <button id="btnFullscreen" type="button">⛶ 全屏</button>
+      <button id="btnOpenMap" type="button"><span>🗺️</span><span>闯关地图</span></button>
+      <button id="btnOpenIntel" type="button"><span>📋</span><span>Boss情报</span></button>
+      <button id="btnPause" type="button">⏸ 暂停</button>
+      <button id="btnWxRestartQuick" type="button">◎</button>
+      <span id="headerChapterBadge"></span>
+      <div id="headerAttrsPill"><span id="attrPowerText"></span><span id="attrControlText"></span><span id="attrSenseText"></span></div>
+      <button id="btnSkipTutorial" type="button">跳过引导</button>
+      <button id="btnCycleVenue" type="button"><span>🏟️</span><span id="venueNameLabel">大师赛馆</span></button>
+      <button id="btnCycleDiff" type="button"><span>🛡️</span><span id="diffLabel">新手保护</span></button>
+      <button id="btnToggleBgm" type="button">🎵 音乐:开</button>
+      <button id="btnToggleQuality" type="button">✨ 画质:高</button>
+      <button id="btnToggleVib" type="button">📳 震感:强烈</button>
+      <button id="btnWxMore" type="button">•••</button>
+      <button id="btnSwitchHero" type="button">换角</button>
+      <span id="playerPosBadge"></span>
+      <span id="hudFocusMini"></span>
+      <span id="hudComboMini"></span>
+      <div id="hudPStamBar"></div><span id="hudPStamText"></span>
+      <div id="hudPPosBar"></div><span id="hudPPosText"></span>
+      <span id="matchRuleBadge"></span>
+      <div id="tacticalChainStrip"></div>
+      <div id="activeBoonsBar"></div>
+      <span id="hudAiImmMini"></span>
+      <button id="btnHawkEye" type="button">🦅 鹰眼 ×<span id="hawkEyeCount">2</span></button>
+      <div id="hudAiPosBar"></div><span id="hudAiPosText"></span>
+      <div id="hudAiStamBar"></div><span id="hudAiStamText"></span>
+      <div id="f_drop"></div><div id="f_rush"></div><div id="f_smash"></div><div id="s_flat"></div><div id="s_high"></div><div id="s_net"></div><span id="deckPhaseBadge"></span>
+      <span id="deckPromptText"></span>
+      <div id="qteBarWrap"><div id="qteBarCursor"></div></div>
+      <button id="btnSkillSlowMo" type="button"><span>⏱️ 极速慢放</span> <span>40</span></button>
+      <button id="btnSkillSteady" type="button"><span>🛡️ 稳心消破绽</span> <span>15</span></button>
+    </div>
 
     <!-- ================= MODALS ================= -->
     <div id="modalMap" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3">
@@ -687,6 +619,7 @@
         osc.connect(bp);
         bp.connect(g);
         g.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); bp.disconnect(); g.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.05);
       },
@@ -709,6 +642,7 @@
           g.gain.exponentialRampToValueAtTime(0.001, startT + dur);
           osc.connect(g);
           g.connect(this.ctx.destination);
+          osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
           osc.start(startT);
           osc.stop(startT + dur + 0.01);
         });
@@ -728,6 +662,7 @@
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.030);
         osc.connect(g);
         g.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.032);
       },
@@ -746,6 +681,7 @@
         subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.44);
         sub.connect(subGain);
         subGain.connect(this.ctx.destination);
+        sub.onended = () => { try { sub.disconnect(); subGain.disconnect(); } catch (e) {} };
         sub.start(now);
         sub.stop(now + 0.45);
         this.playMetalPing('parry');
@@ -766,6 +702,7 @@
           g.gain.exponentialRampToValueAtTime(0.001, now + 0.23);
           osc.connect(g);
           g.connect(this.ctx.destination);
+          osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
           osc.start(now);
           osc.stop(now + 0.24);
         });
@@ -784,6 +721,7 @@
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
         osc.connect(g);
         g.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.10);
       },
@@ -801,6 +739,7 @@
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
         osc.connect(g);
         g.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.038);
       },
@@ -818,6 +757,7 @@
         g.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
         osc.connect(g);
         g.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.09);
       },
@@ -845,6 +785,7 @@
           noise.connect(bp);
           bp.connect(nGain);
           nGain.connect(this.ctx.destination);
+          noise.onended = () => { try { noise.disconnect(); } catch (e) {} };
           noise.start(now);
 
           [1760, 2637, 3951].forEach((freq, idx) => {
@@ -857,6 +798,7 @@
             g.gain.exponentialRampToValueAtTime(0.0008, now + 0.24);
             osc.connect(g);
             g.connect(this.ctx.destination);
+            osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
             osc.start(now);
             osc.stop(now + 0.25);
           });
@@ -870,6 +812,7 @@
           g.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
           osc.connect(g);
           g.connect(this.ctx.destination);
+          osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (e) {} };
           osc.start(now);
           osc.stop(now + 0.2);
         } else {
@@ -908,7 +851,8 @@
         noise.connect(lp);
         lp.connect(g);
         g.connect(this.ctx.destination);
-        noise.start(now);
+        noise.onended = () => { try { noise.disconnect(); } catch (e) {} };
+          noise.start(now);
       },
 
       playHit(type = 'normal') {
@@ -953,6 +897,7 @@
         gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
+        osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (e) {} };
         osc.start(now);
         osc.stop(now + 0.18);
 
@@ -965,6 +910,7 @@
           bGain.gain.exponentialRampToValueAtTime(0.001, now + 0.21);
           bOsc.connect(bGain);
           bGain.connect(this.ctx.destination);
+          bOsc.onended = () => { try { bOsc.disconnect(); bGain.disconnect(); } catch (e) {} };
           bOsc.start(now);
           bOsc.stop(now + 0.22);
         }
@@ -990,6 +936,9 @@
           root.classList.remove('shake-light', 'shake-heavy', 'shake-extreme');
           void root.offsetWidth;
           root.classList.add(cssClass);
+          scheduleAction(350, () => {
+            root.classList.remove('shake-light', 'shake-heavy', 'shake-extreme');
+          }, 'clearRootShake');
         }
         try {
           if (navigator.vibrate) {
@@ -1038,6 +987,89 @@
       { index: 12, chapter: 5, nodeInChap: '5-2', name: '传奇 · 佐藤', role: '精英', targetScore: 7, rVal: 465, postureMax: 115, staminaMax: 115, trait: '节奏破坏者', immunity: null, immunityName: '无', passive: '节奏多变', finisherName: '变速突击', unlockShots: [], avatarColor: '#e11d48' },
       { index: 13, chapter: 5, nodeInChap: '5-Boss', name: '黑皮体育生（蛋）', role: '最终Boss', targetScore: 15, rVal: 510, postureMax: 150, staminaMax: 160, trait: '六边形全能神', immunity: '动态轮换', immunityName: '每3拍轮换免疫球路', passive: '【蛋壳】首次破绽归零时以 55% 破绽狂怒复活！', finisherName: '终极三连杀', unlockShots: [], hasRevive: true, avatarColor: '#fbbf24' }
     ];
+
+    // ==================== 八向步伐与专属球路强关联映射表 + 重心符号(+-0)定义 ====================
+    // 重心符号规则：
+    // '+' = 高重心（起跳重杀、点杀、劈杀、网前跃起扑球）
+    // '-' = 低重心（网前深弓箭步搓球、勾对角、被动低点挑球、中场低姿软压/挡网）
+    // '0' = 标准重心（高远球、平高球、平抽、推球、放网回中、正反手过渡）
+    // 核心失衡法则：若 '+' 与 '-' 之间没有经过 '0'（即 '+' -> '-' 或 '-' -> '+'），立即判定【重心失衡】，下一拍感官慢动作反应延迟 +0.5秒(500ms)！
+    const FOOTWORK_DIRS = {
+      ul: {
+        dir: 'ul', arrow: '↖', name: '左前反手弓箭步', zone: 'front', hand: 'backhand',
+        destX: 0.24, destY: 0.60, vx: -0.707, vy: -0.707,
+        allowedShots: ['搓球', '放网', '勾对角', '挑球'],
+        desc: '反手网前大跨步弓箭步 · 严禁杀球/高远球'
+      },
+      up: {
+        dir: 'up', arrow: '↑', name: '快速垫步上网', zone: 'front', hand: 'forehand',
+        destX: 0.50, destY: 0.59, vx: 0, vy: -1,
+        allowedShots: ['放网', '搓球', '扑球', '挑球'],
+        desc: '中前场脚尖垫步抢网 · 严禁后场重杀/高远'
+      },
+      ur: {
+        dir: 'ur', arrow: '↗', name: '右前正手弓箭步', zone: 'front', hand: 'forehand',
+        destX: 0.76, destY: 0.60, vx: 0.707, vy: -0.707,
+        allowedShots: ['搓球', '放网', '勾对角', '挑球'],
+        desc: '正手网前极限弓箭步 · 严禁杀球/高远球'
+      },
+      left: {
+        dir: 'left', arrow: '←', name: '左侧反手滑步', zone: 'mid', hand: 'backhand',
+        destX: 0.24, destY: 0.73, vx: -1, vy: 0,
+        allowedShots: ['平抽', '推球', '软压', '反手过渡'],
+        desc: '中场左侧滑步接杀/平抽 · 专属中场平抽过渡球路'
+      },
+      right: {
+        dir: 'right', arrow: '→', name: '右侧正手滑步', zone: 'mid', hand: 'forehand',
+        destX: 0.76, destY: 0.73, vx: 1, vy: 0,
+        allowedShots: ['平抽', '推球', '软压', '正手过渡'],
+        desc: '中场右侧滑步接杀/平抽 · 专属中场平抽过渡球路'
+      },
+      dl: {
+        dir: 'dl', arrow: '↙', name: '左后头顶马来步', zone: 'back', hand: 'backhand',
+        destX: 0.25, destY: 0.87, vx: -0.707, vy: 0.707,
+        allowedShots: ['重杀', '高远球', '劈吊', '滑板'],
+        desc: '左后场头顶区马来步转体 · 严禁网前搓球/放网'
+      },
+      down: {
+        dir: 'down', arrow: '↓', name: '侧身交叉并步后退', zone: 'back', hand: 'forehand',
+        destX: 0.50, destY: 0.88, vx: 0, vy: 1,
+        allowedShots: ['高远球', '重杀', '吊球', '平高球'],
+        desc: '中后场底线交叉步后退 · 专属后场拉吊杀球路'
+      },
+      dr: {
+        dir: 'dr', arrow: '↘', name: '右后正手交叉步', zone: 'back', hand: 'forehand',
+        destX: 0.75, destY: 0.87, vx: 0.707, vy: 0.707,
+        allowedShots: ['重杀', '点杀', '高远球', '平高球', '吊球'],
+        desc: '右后场正手底线交叉步 · 严禁网前搓球/放网'
+      }
+    };
+
+    // 每种球路对应的重心符号 ('+' 高重心 | '0' 标准重心 | '-' 低重心) 与骨骼挥拍动作描述
+    const SHOT_COG_SYMBOL_MAP = {
+      '重杀':     { sym: '+', label: '[+] 高重心·腾空反弓下劈', racketAct: '反弓跃起鞭打下劈' },
+      '点杀':     { sym: '+', label: '[+] 高重心·高点立肘快压', racketAct: '立肘高速手腕点杀' },
+      '劈杀':     { sym: '+', label: '[+] 高重心·侧身斜线劈扣', racketAct: '腾空拍面斜切重劈' },
+      '扑球':     { sym: '+', label: '[+] 高重心·网前跃起封网', racketAct: '前跃举拍闪电压网' },
+      '高远球':   { sym: '0', label: '[0] 标准重心·侧身拉弓回中', racketAct: '左手指天满弓高击' },
+      '平高球':   { sym: '0', label: '[0] 标准重心·平直快压底线', racketAct: '正手高位平推底线' },
+      '平抽':     { sym: '0', label: '[0] 标准重心·中场平抽快挡', racketAct: '横拍短促小臂平抽' },
+      '推球':     { sym: '0', label: '[0] 标准重心·手腕平推底角', racketAct: '立腕借力快推底角' },
+      '放网':     { sym: '0', label: '[0] 标准重心·轻托过网回中', racketAct: '拍面轻托卸力回中' },
+      '吊球':     { sym: '0', label: '[0] 标准重心·高点收力包切', racketAct: '直身隐蔽内扣包切' },
+      '劈吊':     { sym: '0', label: '[0] 标准重心·斜线切削网前', racketAct: '高点手腕横切对角' },
+      '滑板':     { sym: '0', label: '[0] 标准重心·滑板欺骗包切', racketAct: '拍面滑切收力坠网' },
+      '正手过渡': { sym: '0', label: '[0] 标准重心·过渡修正失衡', racketAct: '正手柔和挡网回中' },
+      '反手过渡': { sym: '0', label: '[0] 标准重心·过渡修正失衡', racketAct: '反手柔和卸力回中' },
+      '搓球':     { sym: '-', label: '[-] 低重心·深弓箭步展拍切搓', racketAct: '深蹲前倾拇指捻搓' },
+      '勾对角':   { sym: '-', label: '[-] 低重心·极限跨步手腕勾切', racketAct: '贴地跨步手腕回勾' },
+      '挑球':     { sym: '-', label: '[-] 低重心·重心后坐立腕高挑', racketAct: '臀部后坐手腕极度上扬' },
+      '软压':     { sym: '-', label: '[-] 低重心·屈膝卸力挡网前', racketAct: '屈膝压腕轻挡网前' }
+    };
+
+    function getShotCogInfo(shotName) {
+      return SHOT_COG_SYMBOL_MAP[shotName] || { sym: '0', label: '[0] 标准重心', racketAct: '标准挥拍' };
+    }
 
     // Authentic 3D Flight Physics Parameters (speed, gravity, drag, trajType)
     const SHOTS = {
@@ -1183,6 +1215,8 @@
       bloomAlpha: 0,     // Featherblade Screen Bloom radial white-gold flash (0 -> 1)
       lightningBolt: null, // Zeus lightning bolt effect { x, y, life, points }
       swingLock: false,  // Prevents double-click during 110ms pre-swing windup
+      defCooldownTimer: 0, // Anti-mash cooldown timer (ms) when player mashes defense too early
+      lastDeckSig: '',     // Prevents redundant DOM rebuilds of actionDeckContainer
       actionTimers: [],  // Frame-accurate timer queue replacing setTimeout
 
       // 4D Attributes (Power, Control, Sense)
@@ -1236,6 +1270,18 @@
       pGridIdx: 7,
       pHand: 'forehand',
       pCog: 85,
+      cogSymbol: '0',          // 当前重心符号: '+' (高重心) | '0' (标准重心) | '-' (低重心)
+      cogHistory: ['0'],       // 本局重心符号变化链，如 ['0', '+', '0', '-']
+      cogImbalanced: false,    // 若 '+' 与 '-' 之间未经过 '0'，判定重心失衡（下一拍反应慢0.5秒）
+      lastRacketActionText: '准备架拍',
+      selectedFootworkDir: 'down',
+      recommendedDirs: ['down'],
+      sensoryLockUntilMs: 0,
+      hitStartTime: 0,
+      scoreBannerText: '',
+      scoreBannerSub: '',
+      scoreBannerColor: '#fde047',
+      scoreBannerUntilMs: 0,   // 重心失衡导致的 0.5 秒(500ms) 慢动作反应延迟解锁时间戳
       combo: 0,
       maxCombo: 0,
       lastPlayerShot: '高远球',
@@ -1697,6 +1743,12 @@
 
       GameState.pFocus = 90;
       GameState.pCog = 85;
+      GameState.cogSymbol = '0';
+      GameState.cogHistory = ['0'];
+      GameState.cogImbalanced = false;
+      GameState.lastRacketActionText = '准备架拍';
+      GameState.selectedFootworkDir = 'down';
+      GameState.sensoryLockUntilMs = 0;
       GameState.combo = 0;
       GameState.lastPlayerShot = '高远球';
       GameState.lastPlayerTraj = 'high';
@@ -1728,7 +1780,7 @@
       });
       updatePlayerGridFromCoords();
 
-      showCanvasBanner(`第${st.chapter}章 ${st.nodeInChap} · ${st.name}`, `羽刃破绽满100触发【制胜扣杀】 · 每得2分开启【战术流派卡牌】`, '#f59e0b');
+      GameState.canvasBanner.life = 0;
       updateAllUI();
       renderActionDeck();
     }
@@ -1753,16 +1805,26 @@
       document.getElementById('playerPosBadge').textContent = `📍${GRID_NAMES[GameState.pGridIdx] || '后中(7)'}`;
 
       const cogEl = document.getElementById('hudCogLive');
+      const centerCogEl = document.getElementById('centerCogSymbolBadge');
+      const histStr = GameState.cogHistory.slice(-5).map(s => `[${s}]`).join('→');
+      if (centerCogEl) {
+        centerCogEl.textContent = GameState.cogImbalanced
+          ? `⚠️失衡(慢0.5s): ${histStr}`
+          : `⚖️重心: ${histStr}`;
+        centerCogEl.className = GameState.cogImbalanced
+          ? 'text-[9px] text-rose-400 font-black animate-pulse'
+          : 'text-[9px] text-amber-300 font-bold';
+      }
       if (cogEl) {
-        const cogVal = Math.round(GameState.pCog);
-        if (GameState.zeusCharged) {
-          cogEl.textContent = `⚡雷霆已充能(杀球必杀)`;
-          cogEl.className = 'px-1 rounded bg-amber-500/40 text-yellow-200 font-black animate-pulse';
+        if (GameState.cogImbalanced) {
+          cogEl.textContent = `⚠️重心失衡(反应慢0.5s) ${histStr}`;
+          cogEl.className = 'px-1.5 rounded bg-rose-600/40 text-rose-200 border border-rose-400 font-black animate-pulse';
         } else {
-          cogEl.textContent = cogVal < 35 ? `⚠️失衡${cogVal}(禁杀球)` : `⚖️重心${cogVal}`;
-          cogEl.className = cogVal < 35
-            ? 'px-1 rounded bg-rose-500/30 text-rose-300 font-black animate-pulse'
-            : 'px-1 rounded bg-emerald-500/20 text-emerald-300 font-bold';
+          const symName = GameState.cogSymbol === '+' ? '+高重心' : (GameState.cogSymbol === '-' ? '-低重心' : '0标准重心');
+          cogEl.textContent = `⚖️${symName} (${histStr})`;
+          cogEl.className = GameState.cogSymbol === '0'
+            ? 'px-1.5 rounded bg-emerald-500/25 text-emerald-300 font-bold'
+            : (GameState.cogSymbol === '+' ? 'px-1.5 rounded bg-amber-500/25 text-amber-200 font-bold' : 'px-1.5 rounded bg-cyan-500/25 text-cyan-200 font-bold');
         }
       }
 
@@ -1903,12 +1965,20 @@
     function syncDefenseReachButtons() {
       if (GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
       const inReach = isPlayerInLandingCircle();
+      const inCooldown = GameState.defCooldownTimer > 0;
       GameState.lastInReachState = inReach;
 
       const btns = document.querySelectorAll('.def-normal-btn');
       btns.forEach(btn => {
         const statusSpan = btn.querySelector('.reach-status-tag');
-        if (inReach) {
+        if (inCooldown) {
+          btn.classList.remove('btn-ready');
+          btn.classList.add('opacity-45', 'grayscale', 'border-rose-600');
+          if (statusSpan) {
+            statusSpan.textContent = '🚫挥空硬直中';
+            statusSpan.className = 'reach-status-tag text-[9px] px-1 rounded bg-rose-600/50 text-white font-bold';
+          }
+        } else if (inReach) {
           btn.classList.add('btn-ready');
           btn.classList.remove('opacity-45', 'grayscale', 'border-slate-700');
           if (statusSpan) {
@@ -1926,241 +1996,289 @@
       });
     }
 
-    function renderActionDeck() {
-      const container = document.getElementById('actionDeckContainer');
-      const badge = document.getElementById('deckPhaseBadge');
-      const prompt = document.getElementById('deckPromptText');
-      const qteBar = document.getElementById('qteBarWrap');
-      if (!container) return;
-      container.innerHTML = '';
+    // ==================== 重心正负零 (+ / - / 0) 状态转换与失衡判定引擎 ====================
+    function applyCogSymbolTransition(newSym, shotName) {
+      const prevSym = GameState.cogSymbol || '0';
+      const cogInfo = getShotCogInfo(shotName);
+      GameState.lastRacketActionText = cogInfo.racketAct;
 
-      // PHASE 1: SERVE
-      if (GameState.phase === 'serve') {
-        qteBar.classList.add('hidden');
-        badge.textContent = '🏸 发球阶段';
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-400/60 shrink-0';
-        prompt.textContent = GameState.servingSide === 'player'
-          ? '点击发球键挥拍开球（每次击球与完美弹反都会暴涨对手破绽条，满100触发制胜扣杀）！'
-          : '对手准备发球：点击【准备接发球】或按空格键进入高压完美弹反 QTE';
-
-        if (GameState.servingSide === 'player') {
-          const serves = [
-            { id: 's_net', name: '🪶 贴网短发球 [1]', sub: '过网急坠 · 抢网前主动', cost: 1, type: 'net' },
-            { id: 's_flat', name: '⚡ 平快发球 [2]', sub: '平直贴网 · 偷袭中场', cost: 2, type: 'flat' },
-            { id: 's_high', name: '🚀 后场高球 [3]', sub: '高抛垂直落底线 · 压迫破绽', cost: 2, type: 'high' }
-          ];
-          serves.forEach((s, idx) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            const glow = (GameState.tutorialStep === 1 || GameState.tutorialStep === 2) && idx === 0;
-            btn.className = `shot-btn bg-gradient-to-b from-amber-950/90 to-slate-950 hover:from-amber-900 border ${
-              glow ? 'border-amber-400 perfect-glow' : 'border-amber-500/60'
-            } rounded-xl p-2 text-left flex flex-col justify-between`;
-            btn.innerHTML = `<div class="font-black text-xs sm:text-sm text-amber-200">${s.name}</div><div class="text-[10px] text-slate-300">${s.sub}</div>`;
-            btn.addEventListener('click', () => executePlayerServe(s.type, s.cost));
-            container.appendChild(btn);
-          });
-        } else {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'shot-btn col-span-3 sm:col-span-4 bg-gradient-to-r from-amber-600/40 to-rose-700/40 hover:from-amber-500/50 border border-amber-400 rounded-xl p-2.5 text-center font-black text-sm text-white';
-          btn.textContent = '👀 点击迎接对手发球 [空格 / 1]';
-          btn.addEventListener('click', () => triggerAiIncomingShot());
-          container.appendChild(btn);
+      // 核心规则：如果 '+' 和 '-' 之间没有经过 '0'（即 '+' -> '-' 或 '-' -> '+'），立即判定【重心失衡】！
+      if ((prevSym === '+' && newSym === '-') || (prevSym === '-' && newSym === '+')) {
+        GameState.cogImbalanced = true;
+        GameState.pCog = 25;
+        addPlayerPosture(15);
+        spawnFloatingText(
+          GameState.playerVisual.x,
+          GameState.playerVisual.y - 0.09,
+          `⚠️ 重心失衡 [${prevSym}]→[${newSym}] 未经[0]! 下拍反应慢0.5秒!`,
+          '#f43f5e'
+        );
+        showCanvasBanner(
+          `⚠️ 重心失衡 ([${prevSym}] → [${newSym}] 未经过 [0])!`,
+          `高重心[+]与低重心[-]直接切换导致失衡！接下一拍球时反应将比平时慢 0.5 秒！打[0]标准重心球路可恢复！`,
+          '#f43f5e'
+        );
+      } else if (newSym === '0') {
+        // 经过 '0' 标准重心，解除重心失衡！
+        const wasImbalanced = GameState.cogImbalanced;
+        GameState.cogImbalanced = false;
+        GameState.pCog = 88;
+        if (wasImbalanced) {
+          spawnFloatingText(
+            GameState.playerVisual.x,
+            GameState.playerVisual.y - 0.08,
+            `✅ 回归 [0] 标准重心 · 失衡已解除!`,
+            '#34d399'
+          );
         }
-        return;
+      } else {
+        GameState.pCog = newSym === '+' ? 75 : 55;
       }
 
-      // PHASE 2: EXPEDITION 33 HIGH-PRESSURE QTE & FEATHERBLADE DEFLECT
-      if (GameState.phase === 'ai_incoming') {
-        qteBar.classList.remove('hidden');
-        const inc = GameState.incomingShot;
+      GameState.cogSymbol = newSym;
+      GameState.cogHistory.push(newSym);
+      if (GameState.cogHistory.length > 8) GameState.cogHistory.shift();
+    }
 
-        badge.textContent = inc && inc.isSoftBall ? '🔥 软球突击窗口!' : '⚔️ 高压高压弹反QTE';
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-rose-500/30 text-rose-200 border border-rose-400/60 shrink-0 animate-pulse';
-        prompt.textContent = inc && inc.isSoftBall
-          ? `✨ AI 破绽失衡打出【${inc.name}】！点击【⚡中国跳/马来步】或缩圈重合瞬间【完美弹反】！`
-          : `AI 击出【${inc ? inc.name : '杀球'}】！在缩圈重合瞬间(误差<100ms)点击【接球/防守】触发【⚔️完美弹反】暴涨AI破绽！`;
+    // 根据 AI 来球落点 (targetX, targetY) 计算推荐的八向步伐方向
+    function computeRecommendedFootworkDirs(tx, ty) {
+      const col = tx < 0.38 ? 'left' : (tx > 0.62 ? 'right' : 'mid');
+      const row = ty < 0.67 ? 'front' : (ty > 0.79 ? 'back' : 'mid');
+      if (row === 'front') {
+        if (col === 'left') return ['ul', 'up'];
+        if (col === 'right') return ['ur', 'up'];
+        return ['up', 'ul', 'ur'];
+      }
+      if (row === 'back') {
+        if (col === 'left') return ['dl', 'down'];
+        if (col === 'right') return ['dr', 'down'];
+        return ['down', 'dl', 'dr'];
+      }
+      // mid court
+      if (col === 'left') return ['left', 'ul', 'dl'];
+      if (col === 'right') return ['right', 'ur', 'dr'];
+      return ['left', 'right', 'up', 'down'];
+    }
 
-        const defOptions = [
-          { key: '挡网', zoneRead: 'front', title: '🛡️ 接球/防守·挡网 [1]', sub: '完美弹反反噬AI破绽 · 跟进前场', cost: 2, nextY: 0.60, border: 'border-amber-400/80 from-amber-950/90' },
-          { key: '抽挡', zoneRead: 'mid',   title: '⚔️ 接球/防守·抽挡 [2]', sub: '完美弹反平抽借力 · 留守中场', cost: 2, nextY: 0.73, border: 'border-rose-400/80 from-rose-950/90' },
-          { key: '挑球', zoneRead: 'back',  title: '弧 接球/防守·挑球 [3]', sub: '完美弹反高挑底线 · 退回后场', cost: 1, nextY: 0.86, border: 'border-cyan-400/80 from-cyan-950/90' }
-        ];
-
-        defOptions.forEach((d, idx) => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          const glow = GameState.tutorialStep === 3 && idx === 0;
-          btn.className = `shot-btn def-normal-btn bg-gradient-to-b ${d.border} to-slate-950 hover:brightness-125 border ${
-            glow ? 'border-amber-400 perfect-glow' : ''
-          } rounded-xl p-2 text-left flex flex-col justify-between`;
-          btn.innerHTML = `
-            <div class="flex items-center justify-between gap-1">
-              <span class="font-black text-xs sm:text-sm text-white truncate">${d.title}</span>
-              <span class="reach-status-tag text-[9px] px-1 rounded font-bold"></span>
-            </div>
-            <div class="text-[10px] text-slate-300 truncate">${d.sub}</div>
-          `;
-          btn.addEventListener('click', () => handleDefenseInput(d));
-          container.appendChild(btn);
-        });
-
-        if (inc && inc.isSoftBall) {
-          const isChinaJump = inc.targetX >= 0.46;
-          const assaultName = isChinaJump ? '🚀 中国跳' : '🌪️ 马来步';
-          const btnAssault = document.createElement('button');
-          btnAssault.type = 'button';
-          btnAssault.className = 'shot-btn bg-gradient-to-b from-amber-500/40 via-rose-900/90 to-slate-950 border-2 border-amber-400 rounded-xl p-2 text-left flex flex-col justify-between perfect-glow';
-          btnAssault.innerHTML = `
-            <div class="flex items-center justify-between gap-1">
-              <span class="font-black text-xs sm:text-sm text-amber-200 truncate">${assaultName} [4]</span>
-              <span class="text-[9px] px-1 rounded bg-rose-500/40 text-white font-black">双倍破绽暴击</span>
-            </div>
-            <div class="text-[10px] text-amber-100 truncate">瞬移跃起拦截 · 激光重扣</div>
-          `;
-          btnAssault.addEventListener('click', () => executeAssaultStrike(assaultName));
-          container.appendChild(btnAssault);
-        }
-
-        syncDefenseReachButtons();
-        return;
+    // 同步球场中央半透明虚化八向步伐罗盘状态
+    // ==================== A+B+C 真实失误融合模型（双方均有下网/出界，Perfect操作0失误） ====================
+    function evaluatePlayerShotFault(reactTimeMs, isRecommendedStep, shotName, trajType, isDiagonal = false) {
+      // 判定反应帧等级：从 AI 出球到玩家完成【步伐+球路】两次判断的总耗时
+      let frameGrade = 'Perfect';
+      if (!isRecommendedStep || reactTimeMs > 1750) {
+        frameGrade = 'Late'; // 拖沓超时或步伐勉强
+      } else if (reactTimeMs < 320) {
+        frameGrade = 'Early'; // 盲目乱点抢跑
       }
 
-      // PHASE 3: FEATHERBLADE FINISHER (制胜扣杀 - 2s Staggered Stun + Click Screen or Button to Execute!)
-      if (GameState.phase === 'break_finisher') {
-        qteBar.classList.add('hidden');
-        badge.textContent = '🩸 制胜扣杀 FINISHER!';
-        badge.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-rose-600/50 text-amber-200 border border-amber-400 shrink-0 perfect-glow';
-        prompt.textContent = '敌方破绽满100崩溃（陷入2秒失衡硬直）！直接点击球场屏幕或下方按钮发动血腥扣杀制胜扣杀得分：';
-
-        const finishers = [
-          { id: 'f_rush', name: '🩸 制胜扣杀·瞬步扑杀 [点击屏幕/1]', desc: '赛场血芒撕裂网前 · 直接得1分', color: 'from-rose-700/80 to-slate-950 border-amber-400' },
-          { id: 'f_smash', name: '☄️ 制胜扣杀·天陨断头杀 [2]', desc: '腾空雷霆血色重炮 · 直接得1分', color: 'from-amber-600/80 to-rose-950 border-amber-300' },
-          { id: 'f_drop', name: '💀 制胜扣杀·死角斩魂吊 [3]', desc: '极致羞辱制胜扣杀 · 直接得1分', color: 'from-purple-700/80 to-slate-950 border-amber-400' }
-        ];
-        finishers.forEach(f => {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = `shot-btn bg-gradient-to-b ${f.color} border-2 rounded-xl p-2 text-left flex flex-col justify-between perfect-glow`;
-          btn.innerHTML = `<div class="font-black text-xs sm:text-sm text-white">${f.name}</div><div class="text-[10px] text-amber-200">${f.desc}</div>`;
-          btn.addEventListener('click', () => executeBreakFinisher(f));
-          container.appendChild(btn);
-        });
-        return;
+      // 高光操作（Perfect）：屏幕上飘出金字，失误率直接归零（0%）！
+      if (frameGrade === 'Perfect' && !GameState.cogImbalanced) {
+        return { frameGrade: 'Perfect', fault: null, errorRate: 0 };
       }
 
-      // PHASE 4: COUNTER-ATTACK & OFFENSE (反击阶段)
-      qteBar.classList.add('hidden');
-      const zoneLabel = GameState.pPos === 'front' ? '前场网前区' : (GameState.pPos === 'back' ? '后场重炮区' : '中场平抽区');
-      badge.textContent = GameState.counterWindowActive ? `⚡ 弹反反击阶段 (${zoneLabel})` : `⚔️ 进攻组织 (${zoneLabel})`;
-      badge.className = 'px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/25 text-amber-300 border border-amber-400/60 shrink-0';
+      // 普通/迟缓/失衡操作：走 A + B + C 融合随机失误判定
+      const A = 3 + Math.random() * 2; // A: 3% ~ 5% 纯随机基础失误
+      let B = 0;
+      if (GameState.pStamina < 30) B += 5;      // B1: 体力低 +5%
+      if (GameState.cogImbalanced) B += 8;      // B2: 重心失衡 (+与-之间未经过0) +8%
+      const C = (frameGrade === 'Early' || frameGrade === 'Late') ? 10 : 6; // C: 操作时机偏差
 
-      let tacticHint = GameState.counterWindowActive
-        ? '🔥 弹反成功！立刻选择球路（杀球/吊球/网前）发动节奏反击，暴涨敌方破绽！'
-        : '点击直接出球，或按住上下滑动调节弧线（每次击球增加对手破绽值）！';
-      const rec = GameState.recentShots;
-      if (rec.length >= 2) {
-        const s1 = rec[rec.length - 2];
-        const s2 = rec[rec.length - 1];
-        if ((s1 === '高远球' || s1 === '平高球') && (s2 === '吊球' || s2 === '劈吊')) {
-          tacticHint = '⚡ 绝杀分支！打【点杀/重杀/劈杀】触发【🔥拉吊突击×2.0】瞬间打满破绽！';
-        } else if (s1 === '放网' && (s2 === '搓球' || s2 === '勾对角')) {
-          tacticHint = '⚡ 绝杀分支！打【扑球/推球/平抽】完成【🌀网前绞肉机×2.0】！';
+      const errorRate = Math.min(28, A + B + C);
+      if (Math.random() * 100 < errorRate) {
+        // 触发失误：网前/杀球偏重下网(60%下网, 40%出界)，后场高球偏重出界
+        const netBias = (trajType === 'drop' || trajType === 'smash') ? 0.62 : 0.45;
+        const isNet = Math.random() < netBias;
+        if (isNet) {
+          return { frameGrade, fault: 'net', errorRate };
         }
+        return { frameGrade, fault: (isDiagonal || Math.random() < 0.5) ? 'out_wide' : 'out_long', errorRate };
       }
-      prompt.textContent = tacticHint;
+      return { frameGrade, fault: null, errorRate };
+    }
 
-      const st = getCurrentStage();
-      const activeImm = st.immunity === '动态轮换' ? GameState.aiDynamicImmunity : st.immunity;
-      const evaluatedShots = getZoneShotsWithLockReason(GameState.pPos);
-      const hermesDiscount = hasBoon('hermes') ? 0.5 : 1.0;
-      const openCourtInfo = getAiOpenCourtInfo();
+    function rollAiShotFault(shotName, trajType) {
+      // AI 同样走真实失误判定（基础 8% 失误率，当 AI 体力偏低或破绽高时提升至 16%）
+      let aiErrorRate = 8;
+      if (GameState.aiPosture >= 50 || (GameState.aiStamina / GameState.aiStaminaMax) < 0.45) {
+        aiErrorRate += 8;
+      }
+      if (Math.random() * 100 < aiErrorRate) {
+        return Math.random() < 0.55 ? 'net' : (Math.random() < 0.5 ? 'out_wide' : 'out_long');
+      }
+      return null;
+    }
 
-      evaluatedShots.forEach((item, idx) => {
-        const s = item.shot;
-        if (!s) return;
-        const isImmune = activeImm === s.name && !(GameState.zeusCharged && s.trajType === 'smash');
-        const isOpenCourtShot = !item.locked && openCourtInfo && openCourtInfo.shots.includes(s.name);
-        const isComboRec = !item.locked && (isShotRecommendedForCombo(s.name) || (GameState.zeusCharged && s.trajType === 'smash'));
-        const glow = !item.locked && ((GameState.tutorialStep === 4 && idx === 0) || isComboRec || isOpenCourtShot);
+    // 同步屏幕中下方（H * 0.72 单手大拇指热区）的 3x3 步伐盘 与 2x2 球路盘
+    function syncCenterFootworkCompass() {
+      const dpad = document.getElementById('dPad');
+      const deck = document.getElementById('actionDeckContainer');
+      const header = document.getElementById('sensoryStepHeader');
+      const titleText = document.getElementById('sensoryStepTitleText');
+      if (!dpad || !deck) return;
 
-        let styleCls = 'from-slate-900 to-slate-950 border-amber-500/50';
-        if (item.locked) {
-          styleCls = 'from-slate-900/90 to-slate-950 border-slate-700/80 opacity-60';
-        } else if (s.trajType === 'smash') {
-          styleCls = 'from-rose-950/90 to-slate-950 border-rose-500/80';
-        } else if (s.trajType === 'drop') {
-          styleCls = 'from-purple-950/90 to-slate-950 border-purple-400/80';
-        } else if (s.trajType === 'high') {
-          styleCls = 'from-emerald-950/90 to-slate-950 border-emerald-500/80';
-        } else if (s.trajType === 'flat') {
-          styleCls = 'from-cyan-950/90 to-slate-950 border-cyan-500/80';
+      const btns = dpad.querySelectorAll('.dpad-btn');
+      const now = performance.now();
+      const isStepPhase = (GameState.phase === 'ai_incoming' && GameState.incomingShot);
+      const isShotPhase = (GameState.phase === 'player_offense');
+      const isDelayedLocked = isStepPhase && (now < GameState.sensoryLockUntilMs);
+
+      if (isStepPhase) {
+        // 第一步：弹出 3×3 九宫格步伐盘
+        dpad.classList.remove('dpad-hidden');
+        dpad.classList.add('dpad-sensory-active');
+        deck.classList.add('hidden');
+        if (header && titleText) {
+          header.classList.remove('hidden');
+          if (isDelayedLocked) {
+            const remainSec = ((GameState.sensoryLockUntilMs - now) / 1000).toFixed(2);
+            titleText.textContent = `⚠️ 重心失衡慢 0.5s 惩罚中 (${remainSec}s)...`;
+            header.className = 'mb-2 px-3.5 py-1 rounded-full bg-rose-950/95 border border-rose-400 text-xs font-black text-rose-200 shadow-xl flex flex-col items-center gap-1 animate-pulse';
+          } else {
+            const inc = GameState.incomingShot;
+            titleText.textContent = `⚡ 第一步（选步伐）：对手打来【${inc ? inc.name : '来球'}】`;
+            header.className = 'mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-amber-400 text-xs font-black text-amber-200 shadow-xl flex flex-col items-center gap-1';
+          }
         }
-
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        const flashCls = GameState.goldFlashTimer > 0 ? 'gold-flash' : '';
-        btn.className = `shot-btn bg-gradient-to-b ${styleCls} border ${
-          glow ? 'border-amber-400 perfect-glow' : ''
-        } ${flashCls} rounded-xl p-2 text-left flex flex-col justify-between hover:brightness-125`;
-
-        const dispCost = Math.max(1, Math.round(s.cost * hermesDiscount));
-        let tagHtml = '';
-        if (item.locked) {
-          tagHtml = `<span class="text-[9px] px-1 rounded bg-rose-950 text-rose-300 border border-rose-500/40 font-bold">${item.lockReason}</span>`;
-        } else if (GameState.zeusCharged && s.trajType === 'smash') {
-          tagHtml = `<span class="text-[9px] px-1 rounded bg-yellow-400 text-slate-950 font-black">⚡必破重心</span>`;
-        } else if (isOpenCourtShot) {
-          tagHtml = `<span class="text-[9px] px-1 rounded bg-emerald-400 text-slate-950 font-black animate-pulse">${openCourtInfo.label}</span>`;
-        } else if (isImmune) {
-          tagHtml = `<span class="text-[9px] px-1 rounded bg-rose-500/30 text-rose-300 font-bold">免疫90%</span>`;
-        } else if (isComboRec) {
-          tagHtml = `<span class="text-[9px] px-1 rounded bg-amber-400 text-slate-950 font-black">🔥连招推荐</span>`;
-        } else {
-          tagHtml = `<span class="text-[10px] font-mono text-amber-300">[${idx + 1}] +${s.postureDmg}破绽</span>`;
+      } else if (isShotPhase) {
+        // 第二步：步伐盘瞬间消失，原地弹出 2×2 大球路按钮（大拇指无需移动！）
+        dpad.classList.remove('dpad-sensory-active');
+        dpad.classList.add('dpad-hidden');
+        deck.classList.remove('hidden');
+        if (header && titleText) {
+          header.classList.remove('hidden');
+          const fw = FOOTWORK_DIRS[GameState.selectedFootworkDir] || FOOTWORK_DIRS.down;
+          titleText.textContent = `🏸 第二步（选球路）：${fw.name}到位 · 重心[${GameState.cogSymbol}]`;
+          header.className = 'mb-2 px-3.5 py-1 rounded-full bg-slate-950/92 border border-cyan-400 text-xs font-black text-cyan-200 shadow-xl flex flex-col items-center gap-1';
         }
+      } else {
+        // 发球阶段、球飞行阶段、回合结算阶段：UI 全部消失，画面只留球场、两个骨骼小人、球网与羽毛球！
+        dpad.classList.remove('dpad-sensory-active');
+        dpad.classList.add('dpad-hidden');
+        deck.classList.add('hidden');
+        if (header) header.classList.add('hidden');
+      }
 
-        btn.innerHTML = `
-          <div class="flex items-center justify-between gap-1">
-            <span class="font-black text-xs sm:text-sm ${item.locked ? 'text-slate-400' : 'text-amber-100'} truncate">${s.icon} ${s.name}</span>
-            ${tagHtml}
-          </div>
-          <div class="text-[10px] ${item.locked ? 'text-rose-300/80' : 'text-slate-300'} truncate">${item.locked ? `未满足：${item.lockReason}` : `耗体${dispCost} · ${s.desc}`}</div>
-        `;
-
-        if (item.locked) {
-          btn.addEventListener('click', () => {
-            SoundEngine.playHit('miss');
-            spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.05, `${item.lockReason}，无法使用【${s.name}】!`, '#fb7185');
-            showCanvasBanner(`🔒 球路受限：${item.lockReason}`, '可通过通关加点提升四维属性，或打【过渡球/稳心】恢复重心！', '#f43f5e');
-          });
-        } else {
-          btn.addEventListener('pointerdown', (ev) => {
-            ev.stopPropagation();
-            if (GameState.swingLock) return;
-            GameState.pressSwipe.active = true;
-            GameState.pressSwipe.shot = s;
-            GameState.pressSwipe.startY = ev.clientY;
-            GameState.pressSwipe.deltaY = 0;
-            GameState.pressSwipe.startTime = performance.now();
-            GameState.pressSwipe.chargePct = 0;
-          });
-
-          btn.addEventListener('click', () => {
-            const now = performance.now();
-            if (GameState.swingLock || now - GameState.pressSwipe.lastFiredAt < 180) return;
-            GameState.pressSwipe.active = false;
-            GameState.pressSwipe.lastFiredAt = now;
-            executePlayerOffenseShot(s, 0, 0);
-          });
-        }
-
-        container.appendChild(btn);
+      btns.forEach(btn => {
+        const dir = btn.dataset.dir;
+        const isRec = isStepPhase && (GameState.recommendedDirs || []).includes(dir);
+        btn.classList.toggle('recommended-step', isRec);
+        btn.classList.toggle('delayed-locked', isDelayedLocked);
       });
     }
 
-    // ==================== 9. PRE-SWING WINDUP (110ms) + HIT STOP (80ms) + 3D SHUTTLE LAUNCH ====================
+    // 第一步：点击八向步伐后，小人自动滑步到位并停留，原地切换出 2×2 球路按钮
+    function handleSensoryFootworkSelect(dirKey) {
+      if (GameState.paused || GameState.swingLock || GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
+      const now = performance.now();
+
+      if (now < GameState.sensoryLockUntilMs) {
+        const waitSec = ((GameState.sensoryLockUntilMs - now) / 1000).toFixed(2);
+        SoundEngine.playHit('miss');
+        spawnFloatingText(
+          GameState.playerVisual.x,
+          GameState.playerVisual.y - 0.06,
+          `⏳ 重心失衡慢 0.5s (${waitSec}s)`,
+          '#f43f5e'
+        );
+        return;
+      }
+
+      const fw = FOOTWORK_DIRS[dirKey] || FOOTWORK_DIRS.down;
+      const inc = GameState.incomingShot;
+      GameState.selectedFootworkDir = dirKey;
+      GameState.pHand = fw.hand;
+      GameState.pPos = fw.zone;
+
+      const isRecommended = (GameState.recommendedDirs || []).includes(dirKey);
+      const distToBall = Math.hypot(fw.destX - inc.targetX, fw.destY - inc.targetY);
+      GameState.lastStepWasRecommended = isRecommended;
+
+      // 小人自动跑位到该步伐目标位置并停留（不再强制拉回中心，纯粹由你的步伐决定站位）
+      const destX = isRecommended ? inc.targetX : fw.destX;
+      const destY = isRecommended ? inc.targetY : fw.destY;
+      GameState.playerVisual.vx = fw.vx;
+      GameState.playerVisual.vy = fw.vy;
+      startEaseOutMove(GameState.playerVisual, destX, destY, 0.20);
+      SoundEngine.playShoeSqueak();
+      SoundEngine.playJoyFlick();
+
+      if (!isRecommended && distToBall > 0.36) {
+        // 步伐完全选反导致跑向错误区域漏球
+        SoundEngine.playHit('miss');
+        spawnFloatingText(inc.targetX, inc.targetY - 0.05, `💔 步伐跑反 (${fw.name})`, '#f43f5e');
+        scorePoint('ai', `步伐选错(${fw.name})`);
+        return;
+      }
+
+      GameState.pStamina = Math.max(5, GameState.pStamina - 3);
+
+      // 立即原地切换为第二步：2×2 专属球路按钮
+      GameState.shotDecisionStartTime = now;
+      GameState.shotDecisionExpireTime = now + 1800;
+      GameState.timeScale = 0.18;
+      GameState.timeScaleTimer = 2000;
+      GameState.phase = 'player_offense';
+      GameState.incomingShot = null;
+      updatePlayerGridFromCoords();
+      GameState.pPos = fw.zone;
+
+      renderActionDeck();
+      syncCenterFootworkCompass();
+      updateAllUI();
+    }
+
+    function renderActionDeck() {
+      const container = document.getElementById('actionDeckContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (GameState.phase !== 'player_offense') {
+        syncCenterFootworkCompass();
+        return;
+      }
+
+      // 第二步：在刚才 3×3 步伐盘的完全相同位置（H * 0.72）弹出 2×2 大按钮！
+      const fw = FOOTWORK_DIRS[GameState.selectedFootworkDir] || FOOTWORK_DIRS.down;
+      const prevSym = GameState.cogSymbol || '0';
+      const shots = (fw.allowedShots || ['高远球', '吊球', '重杀', '平高球']).slice(0, 4);
+
+      shots.forEach((shotName) => {
+        const s = SHOTS[shotName];
+        if (!s) return;
+        const cogInfo = getShotCogInfo(s.name);
+        const nextSym = cogInfo.sym;
+        const willImbalance = (prevSym === '+' && nextSym === '-') || (prevSym === '-' && nextSym === '+');
+
+        let borderCls = 'border-amber-400 bg-slate-950/94';
+        if (nextSym === '+') borderCls = 'border-rose-400 bg-rose-950/94';
+        else if (nextSym === '-') borderCls = 'border-cyan-400 bg-cyan-950/94';
+        else borderCls = 'border-emerald-400 bg-emerald-950/94';
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `shot-btn ${borderCls} border-2 rounded-2xl p-3 flex flex-col items-center justify-center text-center shadow-2xl active:scale-95`;
+        btn.innerHTML = `
+          <div class="text-base sm:text-lg font-black text-white leading-tight">${s.icon} ${s.name}</div>
+          <div class="text-[11px] font-mono font-extrabold mt-1 ${willImbalance ? 'text-rose-300 animate-pulse' : 'text-amber-300'}">
+            ${willImbalance ? `⚠️[${prevSym}]→[${nextSym}]失衡` : `重心 [${nextSym}]`}
+          </div>
+          <div class="text-[10px] text-slate-300 truncate max-w-full mt-0.5">${cogInfo.racketAct}</div>
+        `;
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const now = performance.now();
+          if (GameState.swingLock || now - GameState.pressSwipe.lastFiredAt < 160) return;
+          GameState.pressSwipe.lastFiredAt = now;
+          executePlayerOffenseShot(s, 0, 0);
+        });
+        container.appendChild(btn);
+      });
+
+      syncCenterFootworkCompass();
+    }
+
+    // ==================== 9. PRE-SWING WINDUP + 3D SHUTTLE LAUNCH ====================
     function launchShuttle(sx, sy, tx, ty, opts = {}) {
       const sh = GameState.shuttle;
       const trajType = opts.trajType || 'high';
@@ -2171,13 +2289,15 @@
       sh.targetX = tx;
       sh.baseTargetX = tx;
       sh.targetY = ty;
+      sh.faultType = opts.faultType || null;
+      sh.faultOwner = opts.faultOwner || null;
       sh.spinType = opts.spinType || null;
       sh.spinDir = opts.spinDir || 0;
       sh.spinAngle = Math.atan2(ty - sy, tx - sx);
       sh.spinSpeed = (trajType === 'smash' || trajType === 'flat') ? 0.46 : (trajType === 'high' ? 0.28 : 0.20);
       sh.squashTimer = 95;
       sh.trajType = trajType;
-      sh.speed = opts.speed || (trajType === 'smash' ? 0.068 : (trajType === 'high' ? 0.023 : (trajType === 'flat' ? 0.052 : 0.036)));
+      sh.speed = opts.speed || (trajType === 'smash' ? 0.058 : (trajType === 'high' ? 0.021 : (trajType === 'flat' ? 0.044 : 0.032)));
       sh.gravity = opts.gravity || (trajType === 'smash' ? 0.60 : (trajType === 'high' ? 0.45 : 0.50));
       sh.drag = opts.drag || (trajType === 'smash' ? 0.08 : (trajType === 'high' ? 0.40 : 0.52));
       sh.startZ = trajType === 'smash' ? 0.62 : 0.24;
@@ -2189,6 +2309,7 @@
       sh.ghosts = [];
 
       if (opts.trailColor) sh.trailColor = opts.trailColor;
+      else if (sh.faultType) sh.trailColor = '#fb7185';
       else if (trajType === 'smash') sh.trailColor = '#f43f5e';
       else if (trajType === 'high') sh.trailColor = '#f59e0b';
       else if (trajType === 'drop') sh.trailColor = '#c084fc';
@@ -2210,89 +2331,57 @@
       }
       SoundEngine.playSwish();
 
-      scheduleAction(110, () => {
+      scheduleAction(90, () => {
         if (lockTag === 'playerSwing') GameState.swingLock = false;
-        // 羽毛球触球顿帧：普通击球强制冻结 40ms，重杀冻结 80ms，配合拍线绷紧高频音与镜头特写推拉
-        GameState.hitStop = (swingType === 'smash' || isJump) ? 80 : 40;
+        GameState.hitStop = (swingType === 'smash' || isJump) ? 55 : 25;
         vis.impactSpark = 1.0;
         SoundEngine.playStringTension();
-        // 【击球特写】：当触发击球（hitStop > 0）时，瞬间将 camZoom 设为 1.35，camFocus 设为击球点
-        GameState.camZoom = 1.35;
+        GameState.camZoom = 1.12;
         GameState.camFocus = { x: vis.x, y: vis.y };
         GameState.camZoomOutElapsedMs = 0;
-        GameState.camState.zoom = 1.35;
-        GameState.camState.focusX = vis.x;
-        GameState.camState.focusY = vis.y;
-        GameState.camState.targetZoom = 1.35;
-        GameState.camState.targetFocusX = vis.x;
-        GameState.camState.targetFocusY = vis.y;
-        GameState.camState.holdTimer = 60;
-        GameState.camState.blurTimer = (swingType === 'smash' || isJump) ? 170 : 90;
         launchCallback();
       }, lockTag);
       return true;
     }
 
-    function executePlayerServe(serveType, cost) {
+    // 点击屏幕任意位置直接发球（极简纯单手体验）
+    function executePlayerServe(serveType = 'high', cost = 2) {
       if (GameState.paused || GameState.swingLock || GameState.phase !== 'serve') return;
+      GameState.phase = 'shuttle_to_ai';
+      GameState.timeScale = 1.0;
+      GameState.timeScaleTimer = 0;
+      applyCogSymbolTransition('0', '高远球');
+      syncCenterFootworkCompass();
+      renderActionDeck();
       SoundEngine.startBgm();
-      const actualCost = hasBoon('hermes') ? cost * 0.5 : cost;
-      GameState.pStamina = Math.max(10, GameState.pStamina - actualCost);
       GameState.rallyCount = 1;
       GameState.playerLastActionTime = performance.now();
-      GameState.lastPlayerShot = serveType === 'high' ? '高远球' : (serveType === 'flat' ? '平高球' : '放网');
-      GameState.lastPlayerTraj = serveType === 'high' ? 'high' : (serveType === 'flat' ? 'flat' : 'drop');
-
-      if (GameState.tutorialStep === 1 || GameState.tutorialStep === 2) {
-        GameState.tutorialStep = 3;
-      }
+      GameState.lastPlayerShot = '高远球';
+      GameState.lastPlayerTraj = 'high';
 
       const sx = GameState.playerVisual.x;
       const sy = GameState.playerVisual.y;
 
       performSwingThenLaunch(
         GameState.playerVisual,
-        serveType === 'high' ? 'clear_retreat' : 'deep_lunge',
-        serveType === 'high' ? 'clear' : (serveType === 'net' ? 'net' : 'drive'),
+        'clear_retreat',
+        'clear',
         false,
         () => {
           SoundEngine.playHit('normal');
-          if (serveType === 'high') {
-            addAiPosture(12);
-            GameState.aiPos = 'back';
-            startEaseOutMove(GameState.aiVisual, 0.5, 0.14, 0.36);
-            startEaseOutMove(GameState.playerVisual, 0.5, 0.85, 0.34);
-            spawnFloatingText(0.5, 0.25, '🚀高远压底线! 敌破绽+12', '#f59e0b');
-            launchShuttle(sx, sy, 0.5, 0.14, { trajType: 'high', speed: 0.024, drag: 0.42 });
-          } else if (serveType === 'flat') {
-            addAiPosture(10);
-            GameState.aiPos = 'mid';
-            startEaseOutMove(GameState.aiVisual, 0.32, 0.24, 0.30);
-            startEaseOutMove(GameState.playerVisual, 0.5, 0.83, 0.30);
-            spawnFloatingText(0.32, 0.24, '⚡平快偷袭! 敌破绽+10', '#38bdf8');
-            launchShuttle(sx, sy, 0.32, 0.24, { trajType: 'flat', speed: 0.050, drag: 0.14 });
-          } else {
-            addAiPosture(10);
-            if (hasBoon('dionysus')) {
-              GameState.aiPoisonTimer = 3000;
-              spawnFloatingText(0.5, 0.32, '🍷网前绞肉机! 3秒持续涨破绽', '#c084fc');
-            }
-            GameState.aiPos = 'front';
-            startEaseOutMove(GameState.aiVisual, 0.5, 0.36, 0.30);
-            startEaseOutMove(GameState.playerVisual, 0.5, 0.82, 0.32);
-            launchShuttle(sx, sy, 0.5, 0.36, { trajType: 'drop', speed: 0.035, drag: 0.50 });
-          }
+          GameState.aiPos = 'back';
+          startEaseOutMove(GameState.aiVisual, 0.5, 0.16, 0.34);
+          launchShuttle(sx, sy, 0.5, 0.16, { trajType: 'high', speed: 0.022, drag: 0.42 });
           updateAllUI();
         },
         'playerSwing'
       );
 
-      scheduleAction(480, () => {
-        if (!checkAiPostureBreak()) triggerAiIncomingShot();
+      scheduleAction(680, () => {
+        triggerAiIncomingShot();
       }, 'triggerAiNext');
     }
 
-    // ==================== 10. AI WEIGHTED CARD-DRAW ENGINE & EXPEDITION 33 / FEATHERBLADE DEFLECT ====================
     function weightedRandomDraw(deck) {
       const totalWeight = deck.reduce((sum, card) => sum + Math.max(1, card.weight), 0);
       let r = Math.random() * totalWeight;
@@ -2440,7 +2529,80 @@
       }
 
       const now = performance.now();
-      const baseDur = GameState.slowMoActive ? 1580 : (GameState.difficulty === 'novice' ? 1280 : 980);
+      // 【AI 对手随机下网 (NET) 与出界 (OUT) 检定】：对手在击打过程中同样有真实概率下网或出界！
+      const aiFault = rollAiShotFault(chosen.name, chosen.trajType);
+      GameState.hitStartTime = now;
+
+      if (aiFault === 'net') {
+        // AI 击球直接下网！球撞在 y = 0.50 球网上坠落，不弹出步伐盘，玩家直接得分！
+        GameState.phase = 'shuttle_to_ai';
+        GameState.incomingShot = null;
+        GameState.timeScale = 1.0;
+        GameState.timeScaleTimer = 0;
+        syncCenterFootworkCompass();
+        renderActionDeck();
+        updateAllUI();
+
+        performSwingThenLaunch(
+          GameState.aiVisual,
+          (chosen.isSmash || chosen.isAiFeint) ? 'jump_smash' : (chosen.trajType === 'drop' ? 'deep_lunge' : 'clear_retreat'),
+          (chosen.isSmash || chosen.isAiFeint) ? 'smash' : (chosen.trajType === 'drop' ? 'lunge' : 'clear'),
+          (chosen.isSmash || chosen.isAiFeint),
+          () => {
+            SoundEngine.playHit('miss');
+            launchShuttle(GameState.aiVisual.x, GameState.aiVisual.y, targetX, 0.50, {
+              trajType: 'flat',
+              speed: 0.048,
+              faultType: 'net',
+              faultOwner: 'ai'
+            });
+            spawnParticles(targetX, 0.50, '#ffffff', 18);
+            spawnFloatingText(targetX, 0.48, `🎉 对手【${chosen.name}】下网 NET! 我方+1分`, '#4ade80');
+            showCanvasBanner(`🎉 对手击球下网 NET!`, `${st.name}回球挂网失误，我方直接得 1 分！`, '#10b981');
+            scheduleAction(460, () => { scorePoint('player', `对手${chosen.name}下网`); }, 'faultScore');
+          },
+          'aiSwing'
+        );
+        return;
+      }
+
+      if (aiFault === 'out_long' || aiFault === 'out_wide') {
+        // AI 击球出界！球直接飞向我方底线外或边线外落地，不强制玩家接球，落地直接判我方得分！
+        const outTx = aiFault === 'out_wide' ? (targetX < 0.5 ? 0.015 : 0.985) : targetX;
+        const outTy = aiFault === 'out_long' ? 0.985 : targetY;
+        GameState.phase = 'shuttle_to_ai';
+        GameState.incomingShot = null;
+        GameState.timeScale = 1.0;
+        GameState.timeScaleTimer = 0;
+        syncCenterFootworkCompass();
+        renderActionDeck();
+        updateAllUI();
+
+        performSwingThenLaunch(
+          GameState.aiVisual,
+          (chosen.isSmash || chosen.isAiFeint) ? 'jump_smash' : 'clear_retreat',
+          chosen.isSmash ? 'smash' : 'clear',
+          !!chosen.isSmash,
+          () => {
+            SoundEngine.playHit(chosen.isSmash ? 'smash' : 'normal');
+            launchShuttle(GameState.aiVisual.x, GameState.aiVisual.y, outTx, outTy, {
+              trajType: chosen.trajType,
+              speed: chosen.speed,
+              faultType: aiFault,
+              faultOwner: 'ai'
+            });
+            spawnFloatingText(outTx, outTy - 0.06, `🎉 对手【${chosen.name}】出界 OUT! 我方+1分`, '#4ade80');
+            showCanvasBanner(`🎉 对手击球出界 OUT!`, aiFault === 'out_wide' ? `${st.name}回球飞出单打边线，我方得 1 分！` : `${st.name}回球飞出底线，我方得 1 分！`, '#10b981');
+            scheduleAction(540, () => { scorePoint('player', `对手${chosen.name}出界`); }, 'faultScore');
+          },
+          'aiSwing'
+        );
+        return;
+      }
+
+      // 正常界内好球：在对手击球一瞬间弹出【第 1 次判断：八点步伐盘】！
+      const baseDur = GameState.slowMoActive ? 1750 : (GameState.difficulty === 'novice' ? 1650 : 1350);
+      const penaltyMs = GameState.cogImbalanced ? 500 : 0;
 
       GameState.incomingShot = {
         ...chosen,
@@ -2448,10 +2610,16 @@
         targetY,
         startTime: now + 110,
         overlapTime: now + 110 + baseDur,
-        expireTime: now + 110 + baseDur + (GameState.difficulty === 'novice' ? 1350 : 950)
+        expireTime: now + 110 + baseDur + (GameState.difficulty === 'novice' ? 650 : 350) - (penaltyMs > 0 ? 220 : 0)
       };
 
       GameState.phase = 'ai_incoming';
+      GameState.recommendedDirs = computeRecommendedFootworkDirs(targetX, targetY);
+      GameState.sensoryLockUntilMs = now + 110 + penaltyMs;
+      GameState.timeScale = 0.22;
+      GameState.timeScaleTimer = baseDur + 650;
+
+      syncCenterFootworkCompass();
       renderActionDeck();
       updateAllUI();
 
@@ -2471,7 +2639,6 @@
       );
     }
 
-    // China Jump (中国跳) & Malay Step (马来步) Assault
     function executeAssaultStrike(assaultName) {
       if (GameState.paused || GameState.swingLock || GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
       const inc = GameState.incomingShot;
@@ -2502,7 +2669,7 @@
       const ty = 0.20;
       startEaseOutMove(GameState.aiVisual, tx, 0.22, 0.34);
 
-      GameState.phase = 'player_offense';
+      GameState.phase = 'shuttle_to_ai';
       GameState.incomingShot = null;
       updatePlayerGridFromCoords();
       updateAllUI();
@@ -2522,7 +2689,9 @@
           spawnParticles(inc.targetX, inc.targetY, '#fbbf24', 36);
           spawnFloatingText(inc.targetX, inc.targetY - 0.06, `⚡PERFECT ${assaultName}! 敌破绽+${doublePostureDmg}`, '#fde047');
           showCanvasBanner(`${assaultName} · 飞跃重扣!`, `敌方破绽暴涨 +${doublePostureDmg}！`, '#f43f5e');
-          checkAiPostureBreak();
+          if (!checkAiPostureBreak()) {
+            scheduleAction(480, () => { triggerAiIncomingShot(); }, 'triggerAiNext');
+          }
         },
         'playerSwing'
       );
@@ -2531,19 +2700,43 @@
     // Expedition 33 High-Pressure QTE & Featherblade 3-Tier Deflect (完美弹反 / Good 格挡 / Miss 破防)
     function handleDefenseInput(defOption) {
       if (GameState.paused || GameState.swingLock || GameState.phase !== 'ai_incoming' || !GameState.incomingShot) return;
+      // 若点击底部快捷接球按钮，自动联动触发第一阶段最佳步伐切入第二阶段感官慢动作球路选择！
+      if (GameState.recommendedDirs && GameState.recommendedDirs.length > 0) {
+        handleSensoryFootworkSelect(GameState.recommendedDirs[0]);
+        return;
+      }
       const inc = GameState.incomingShot;
 
-      // 【维度二·任务1：击球点高度限制 (Z轴修复)】(AI 假动作吊球 bypassZGate 时豁免高度拦截)
+      // 【防无脑连点机制】：如果玩家处于乱按挥空冷却硬直中，拒绝输入！
+      if (GameState.defCooldownTimer > 0) {
+        SoundEngine.playHit('miss');
+        spawnFloatingText(
+          GameState.playerVisual.x,
+          GameState.playerVisual.y - 0.06,
+          `🚫 连点挥空硬直中 (${(GameState.defCooldownTimer / 1000).toFixed(2)}s)!`,
+          '#f43f5e'
+        );
+        return;
+      }
+
+      // 【维度二·任务1：击球点高度限制 (Z轴修复) + 乱按防连点惩罚】
       if (!inc.bypassZGate && GameState.shuttle.inFlight && GameState.shuttle.z >= 0.30) {
-        SoundEngine.playSwish();
+        SoundEngine.playHit('miss');
+        GameState.defCooldownTimer = 420; // 惩罚锁定防守键 0.42 秒，防止玩家无脑狂点刷时机！
+        GameState.pStamina = Math.max(5, GameState.pStamina - 6);
+        addPlayerPosture(10);
+        GameState.playerVisual.swingType = 'drive';
+        GameState.playerVisual.swingAnim = 0.75;
         const zVal = GameState.shuttle.z.toFixed(2);
         spawnFloatingText(
           GameState.playerVisual.x,
           GameState.playerVisual.y - 0.06,
-          `⚠️ 球未下落，无法击球 (Z=${zVal})`,
-          '#fbbf24'
+          `🚫 过早挥拍扑空! (Z=${zVal} · 硬直0.4s · 破绽+10)`,
+          '#f43f5e'
         );
-        showCanvasBanner('⚠️ 球未下落，无法击球!', `当前羽毛球高度 Z=${zVal}，必须等球下落到最佳击球区间 (Z < 0.30) 才能接球！`, '#f59e0b');
+        showCanvasBanner('🚫 过早连点挥空惩罚 (硬直 0.42s)!', `球还在高空 (Z=${zVal})，盲目连点导致挥空硬直且破绽+10！请看准缩圈重合瞬间按一次！`, '#f43f5e');
+        syncDefenseReachButtons();
+        updateAllUI();
         return;
       }
 
@@ -2751,6 +2944,23 @@
     function executePlayerOffenseShot(shot, holdChargePct = 0, swipeDeltaY = 0) {
       if (GameState.paused || GameState.swingLock || GameState.phase !== 'player_offense') return;
 
+      const actualCost = hasBoon('hermes') ? shot.cost * 0.5 : shot.cost;
+      if (GameState.pStamina < actualCost && shot.cost >= 3) {
+        SoundEngine.playHit('miss');
+        spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.06, `⚡体力不足 (${Math.round(GameState.pStamina)}/${actualCost})! 请打过渡/挑球或稳心回体`, '#f43f5e');
+        showCanvasBanner('⚡ 体力透支，无法强行重杀!', '请使用低耗体【高远球/挑球/正反手过渡】调整呼吸！', '#f43f5e');
+        return;
+      }
+
+      // 立即切换至 'shuttle_to_ai' 状态，结束第二段感官慢动作，恢复正常时间流速，并结算重心符号 (+ / - / 0)！
+      GameState.phase = 'shuttle_to_ai';
+      GameState.timeScale = 1.0;
+      GameState.timeScaleTimer = 0;
+      const cogInfo = getShotCogInfo(shot.name);
+      applyCogSymbolTransition(cogInfo.sym, shot.name);
+      syncCenterFootworkCompass();
+      renderActionDeck();
+
       const st = getCurrentStage();
       const hero = getCurrentHero();
       const adr = getAdrenalineInfo(GameState.combo);
@@ -2758,7 +2968,6 @@
 
       const stamRatio = GameState.pStamina / GameState.pStaminaMax;
       const stamQualityMult = stamRatio < 0.20 ? 0.72 : (stamRatio < 0.40 ? 0.86 : 1.0);
-      const actualCost = hasBoon('hermes') ? shot.cost * 0.5 : shot.cost;
       GameState.pStamina = Math.max(0, GameState.pStamina - actualCost);
       GameState.rallyCount++;
 
@@ -2782,7 +2991,7 @@
       if (shot.trajType === 'smash' && !isFeintShot) {
         nextPose = 'jump_smash';
         spawnPlayerSmashAfterimages();
-        startEaseOutMove(GameState.playerVisual, 0.50, 0.81, 0.38);
+        // 保持在当前步伐位置停留
         GameState.pCog = Math.max(22, GameState.pCog - 8);
         // 1. 当玩家打出【重杀】并落地后，陷入 0.4 秒 (400ms) 的“深蹲后摇”状态（此时无法移动）
         GameState.playerRecoveryTimer = 400;
@@ -2790,12 +2999,12 @@
       } else if (isFeintShot) {
         nextPose = 'jump_smash';
         spawnPlayerSmashAfterimages();
-        startEaseOutMove(GameState.playerVisual, 0.50, 0.76, 0.32);
+        // 保持在当前步伐位置停留
         GameState.playerRecoveryTimer = 180;
         GameState.recoveryType = 'feint';
       } else if (shot.trajType === 'high') {
         nextPose = 'clear_retreat';
-        startEaseOutMove(GameState.playerVisual, 0.50, 0.88, 0.36);
+        // 保持在当前步伐位置停留
         GameState.pCog = Math.min(100, GameState.pCog + 15);
         GameState.playerRecoveryTimer = 140;
         GameState.recoveryType = 'clear';
@@ -2813,7 +3022,7 @@
       } else {
         // 平抽挡：动作极小，0秒无后摇
         nextPose = 'deep_lunge';
-        startEaseOutMove(GameState.playerVisual, 0.50, 0.74, 0.26);
+        // 保持在当前步伐位置停留
         GameState.playerRecoveryTimer = 0;
         GameState.recoveryType = 'flat_zero';
       }
@@ -2943,6 +3152,63 @@
           showCanvasBanner(`❌ 【${shot.name}】单打边线出界 OUT!`, `落点 x=${tx.toFixed(2)} 超出边线 (提升🎯控球属性可稳定压线)`, '#f43f5e');
           scorePoint('ai', `${shot.name}边线出界`);
         }, 'playerSwing');
+        return;
+      }
+
+      // 【我方击球随机下网 (NET) 与出界 (OUT) 检定】：击球过程中存在真实下网与出界概率
+      const reactTimeMs = Math.max(0, performance.now() - (GameState.hitStartTime || performance.now()));
+      const faultEval = evaluatePlayerShotFault(reactTimeMs, !!GameState.lastStepWasRecommended, shot.name, shot.trajType, !!shot.diagonal);
+      const playerFault = faultEval.fault;
+      if (faultEval.frameGrade === 'Perfect' && !playerFault) {
+        spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.08, `✨ PERFECT! (${Math.round(reactTimeMs)}ms · 0%失误)`, '#fde047');
+      }
+      if (playerFault === 'net') {
+        performSwingThenLaunch(
+          GameState.playerVisual,
+          nextPose,
+          shot.trajType === 'smash' ? 'smash' : 'net',
+          isJumpSmash,
+          () => {
+            SoundEngine.playHit('miss');
+            SoundEngine.triggerShake('heavy', 'rgba(244, 63, 94, 0.38)');
+            launchShuttle(GameState.playerVisual.x, GameState.playerVisual.y, tx, 0.50, {
+              trajType: 'flat',
+              speed: 0.052,
+              faultType: 'net',
+              faultOwner: 'player'
+            });
+            spawnParticles(tx, 0.50, '#ffffff', 18);
+            spawnFloatingText(tx, 0.50, `❌ 【${shot.name}】挂网失误 NET!`, '#f43f5e');
+            showCanvasBanner(`❌ 击球下网 NET!`, `【${shot.name}】未能过网挂在网带上，对手得 1 分！`, '#f43f5e');
+            scheduleAction(450, () => { scorePoint('ai', `${shot.name}下网`); }, 'faultScore');
+          },
+          'playerSwing'
+        );
+        return;
+      }
+      if (playerFault === 'out_long' || playerFault === 'out_wide') {
+        const faultTx = playerFault === 'out_wide' ? (tx > 0.5 ? 0.985 : 0.015) : tx;
+        const faultTy = playerFault === 'out_long' ? 0.015 : ty;
+        performSwingThenLaunch(
+          GameState.playerVisual,
+          nextPose,
+          shot.trajType === 'smash' ? 'smash' : 'clear',
+          isJumpSmash,
+          () => {
+            SoundEngine.playHit('normal');
+            SoundEngine.triggerShake('heavy', 'rgba(244, 63, 94, 0.35)');
+            launchShuttle(GameState.playerVisual.x, GameState.playerVisual.y, faultTx, faultTy, {
+              trajType: shot.trajType,
+              speed: shot.speed,
+              faultType: playerFault,
+              faultOwner: 'player'
+            });
+            spawnFloatingText(faultTx, faultTy + 0.05, `❌ 【${shot.name}】出界 OUT!`, '#f43f5e');
+            showCanvasBanner(`❌ 击球出界 OUT!`, playerFault === 'out_wide' ? `【${shot.name}】飞出单打边线外，对手得 1 分！` : `【${shot.name}】飞出底线外，对手得 1 分！`, '#f43f5e');
+            scheduleAction(520, () => { scorePoint('ai', `${shot.name}出界`); }, 'faultScore');
+          },
+          'playerSwing'
+        );
         return;
       }
 
@@ -3150,7 +3416,7 @@
       );
 
       scheduleAction(540, () => {
-        if (GameState.phase === 'player_offense' && !checkAiPostureBreak()) {
+        if ((GameState.phase === 'shuttle_to_ai' || GameState.phase === 'player_offense') && !checkAiPostureBreak()) {
           triggerAiIncomingShot();
           if (GameState.aiAnticipatedZone) {
             const antX = GameState.aiAnticipatedZone.startsWith('L') ? 0.24 : 0.76;
@@ -3250,7 +3516,14 @@
       syncPostureAlias();
 
       GameState.pCog = 85;
-      startEaseOutMove(GameState.playerVisual, 0.5, 0.85, 0.30);
+      GameState.cogSymbol = '0';
+      GameState.cogHistory = ['0'];
+      GameState.cogImbalanced = false;
+      GameState.lastRacketActionText = '准备架拍';
+      GameState.selectedFootworkDir = 'down';
+      GameState.sensoryLockUntilMs = 0;
+      startEaseOutMove(GameState.playerVisual, 0.5, 0.85, 0.28);
+      startEaseOutMove(GameState.aiVisual, 0.5, 0.20, 0.28);
 
       if (winner === 'player') {
         GameState.playerScore++;
@@ -3258,28 +3531,21 @@
         GameState.xp += 30;
       } else {
         GameState.aiScore++;
-        GameState.servingSide = 'ai';
+        GameState.servingSide = 'player'; // 单手极简版始终由玩家点击屏幕发球开启下一拍
         GameState.xp += 8;
       }
+
+      // 得分瞬间在屏幕正中央飘出巨大比分特效（如 "1 : 0  (对手下网失误)"），飘完自动消失！
+      GameState.scoreBannerText = `${GameState.playerScore} : ${GameState.aiScore}`;
+      GameState.scoreBannerSub = reasonText || (winner === 'player' ? '我方得分' : '对手得分');
+      GameState.scoreBannerColor = winner === 'player' ? '#fde047' : '#fb7185';
+      GameState.scoreBannerUntilMs = now + 2000;
+      GameState.canvasBanner.life = 0;
 
       saveGameData();
       updateAllUI();
       renderActionDeck();
-
-      if (GameState.playerScore >= GameState.targetScore) {
-        openMatchEndModal(true);
-        return;
-      }
-      if (GameState.aiScore >= GameState.targetScore) {
-        openMatchEndModal(false);
-        return;
-      }
-
-      // 【维度四：战术流派赋形】每得 3 分弹出“战术复盘”派系构筑三选一（永久生效）
-      if (winner === 'player' && GameState.playerScore > 0 && (GameState.playerScore % 3 === 0 || GameState.playerScore === 2) && GameState.lastBoonPointTrigger !== GameState.playerScore) {
-        GameState.lastBoonPointTrigger = GameState.playerScore;
-        openFeatherbladeBoonModal(`📋 战术复盘 · 派系构筑 (比分 ${GameState.playerScore}:${GameState.aiScore})`, '请从以下三项【战术抉择】派系徽章中选择一项永久融入你的球风：');
-      }
+      syncCenterFootworkCompass();
     }
 
     // ==================== 12. FEATHERBLADE BOON MODAL & GAME MODALS ====================
@@ -3815,14 +4081,20 @@
       }).join('');
 
       body.innerHTML = `
-        <div class="p-3 rounded-xl bg-rose-950/40 border border-amber-500/50 space-y-1">
-          <div class="text-sm font-black text-amber-300">🩸《羽刃》破绽系统 & 《羽刃高压》高压完美弹反 QTE</div>
-          <div>1. <strong class="text-amber-200">破绽条 (0 → 100)</strong>：每次成功击球或弹反都会增加对方破绽值；相持中若超 1.1 秒未受击会自动缓慢下降。</div>
-          <div>2. <strong class="text-rose-300">【重心崩溃】 & 制胜扣杀 (Finisher)</strong>：破绽达到 100 时陷入 2 秒失衡硬直，对方点击屏幕或制胜扣杀键直接触发血腥暴力扣杀得 1 分！</div>
-          <div>3. <strong class="text-yellow-300">三段式防守判定</strong>：【完美弹反】(误差<100ms) 白闪泛光+免疫伤害+AI破绽暴涨；【Good 格挡】正常接球；【Miss 破防】自身破绽暴涨且球落地丢分！</div>
+        <div class="p-3 rounded-xl bg-slate-900/95 border border-amber-400/60 space-y-1.5">
+          <div class="text-sm font-black text-amber-300">👁️ 双重感官慢动作 & 八向步伐-球路强关联 & 重心[+/-/0]博弈</div>
+          <div>1. <strong class="text-amber-200">感官慢动作镜头 I（选步伐）</strong>：对手出球瞬间切入慢动作，球场中央浮现半透明八向步伐罗盘，点击高亮方向让人物迈出对应步伐（如网前弓箭步、中场滑步、后场马来步/交叉步）。</div>
+          <div>2. <strong class="text-cyan-300">感官慢动作镜头 II（选专属球路）</strong>：步伐到位后切入第二段慢动作，仅展示与该步伐强关联的球路（网前步伐只会出现【搓球/放网/勾对角/挑球】，绝不出现杀球或高远球；后场步伐只会出现【重杀/高远球/平高球/吊球】）。</div>
+          <div>3. <strong class="text-rose-300">重心正负零（+ / - / 0）失衡法则</strong>：高重心 <code class="text-amber-300">[+]</code>（杀球/扑球）、低重心 <code class="text-cyan-300">[-]</code>（搓球/勾对角/挑球）、标准重心 <code class="text-emerald-300">[0]</code>（高远/平高/平抽/放网/过渡）。若 <code class="text-rose-300">[+]</code> 与 <code class="text-rose-300">[-]</code> 之间没有经过 <code class="text-emerald-300">[0]</code> 直接跳变，立即判定<strong>【重心失衡】</strong>，接下一拍球时反应比平时慢 <strong>0.5 秒</strong>！</div>
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-400/50 space-y-1.5">
+          <div class="text-sm font-black text-emerald-300">📱 如何将《羽刃》打包为微信小程序 / 微信小游戏 / 手机 App？</div>
+          <div>• <strong class="text-white">方案 A：微信小程序 WebView 秒级上线（零改动）</strong>：将本单文件 <code class="text-amber-200">featherblade.html</code> 部署至 HTTPS 静态托管（如腾讯云静态网站托管/Vercel），在小程序页面中加入 <code class="text-cyan-200">&lt;web-view src="https://你的域名/featherblade.html"&gt;&lt;/web-view&gt;</code>，并在 <code class="text-cyan-200">app.json</code> 设置 <code class="text-cyan-200">"pageOrientation": "landscape"</code> 即可真机全屏横屏运行。</div>
+          <div>• <strong class="text-white">方案 B：微信小游戏原生 Canvas 移植</strong>：本游戏渲染层为 100% 原生 HTML5 2D Canvas + Web Audio，只需引入微信官方 <code class="text-amber-200">weapp-adapter.js</code>，在 <code class="text-cyan-200">game.json</code> 配置 <code class="text-cyan-200">{"deviceOrientation": "landscape"}</code> 即可打包发布微信小游戏。</div>
+          <div>• <strong class="text-white">方案 C：iOS / Android 独立原生 App（Capacitor / PWA）</strong>：手机浏览器打开本页点击“添加到主屏幕”即可免安装全屏运行；或执行 <code class="text-amber-200">npx cap init Featherblade com.featherblade.game && npx cap add android && npx cap add ios</code> 一键生成 APK 与 Xcode 工程。</div>
         </div>
         <div>
-          <div class="font-black text-amber-300 mb-1.5">🏛️《羽刃暗金》战术流派卡牌池 (每得2分或获胜三选一)</div>
+          <div class="font-black text-amber-300 mb-1.5">🏛️ 战术流派卡牌池</div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">${boonsHtml}</div>
         </div>
       `;
@@ -3842,8 +4114,13 @@
       if (!container || !canvas) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = container.getBoundingClientRect();
-      canvas.width = Math.max(320, rect.width * dpr);
-      canvas.height = Math.max(200, rect.height * dpr);
+      const targetW = Math.max(320, Math.round(rect.width * dpr));
+      const targetH = Math.max(200, Math.round(rect.height * dpr));
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      ctx.imageSmoothingEnabled = true;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
@@ -4020,6 +4297,12 @@
       }
       if (GameState.playerRecoveryTimer > 0) {
         GameState.playerRecoveryTimer = Math.max(0, GameState.playerRecoveryTimer - dtMs);
+      }
+      if (GameState.defCooldownTimer > 0) {
+        GameState.defCooldownTimer = Math.max(0, GameState.defCooldownTimer - dtMs);
+        if (GameState.defCooldownTimer === 0 && GameState.phase === 'ai_incoming') {
+          syncDefenseReachButtons();
+        }
       }
       if (GameState.tacticalSuppressTimer > 0) {
         GameState.tacticalSuppressTimer = Math.max(0, GameState.tacticalSuppressTimer - dtMs);
@@ -4247,7 +4530,7 @@
       ctx.fillStyle = isBroken ? '#fca5a5' : '#fef3c7';
       ctx.textAlign = 'center';
       ctx.shadowColor = '#000';
-      ctx.shadowBlur = 4;
+      ctx.shadowBlur = 0;
       ctx.fillText(`${label} ${Math.round(postureVal)}/100`, cx, cy - 4);
       ctx.restore();
     }
@@ -4283,44 +4566,30 @@
         }
       }
 
-      // Hit-Stop Freeze with Instant 1.35x Camera Close-Up & Radial Impact Focus Glow
-      if (GameState.hitStop > 0) {
-        GameState.hitStop = Math.max(0, GameState.hitStop - dtMs);
-        GameState.camZoom = 1.35;
-        GameState.camZoomOutElapsedMs = 0;
-        ctx.save();
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const focusPt = projectCourtRaw(GameState.camFocus.x, GameState.camFocus.y, w, h);
-        const rad = ctx.createRadialGradient(focusPt.x, focusPt.y - 30, 8, focusPt.x, focusPt.y - 30, 150);
-        rad.addColorStop(0, 'rgba(254, 243, 199, 0.32)');
-        rad.addColorStop(1, 'transparent');
-        ctx.fillStyle = rad;
-        ctx.fillRect(0, 0, w, h);
-        ctx.restore();
-        rafId = requestAnimationFrame(renderCourtLoop);
-        return;
-      }
-
       const venue = VENUES[GameState.venueIdx] || VENUES[0];
       const st = getCurrentStage();
       const hero = getCurrentHero();
 
-      updatePhysicsTick(now, dtMs);
+      // Hit-Stop: 仅暂停物理推进，但正常重绘超清球场，彻底杜绝叠雾发蒙！
+      if (GameState.hitStop > 0) {
+        GameState.hitStop = Math.max(0, GameState.hitStop - dtMs);
+      } else {
+        updatePhysicsTick(now, dtMs);
+      }
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      // 【动态镜头特写（Zoom & Focus）】：在 ctx.setTransform 处应用全局摄像机缩放 GameState.camZoom 与焦点 camFocus
-      const zoom = GameState.camZoom || 1.0;
+      // 【动态镜头特写（Zoom & Focus）】：限制最大缩放为 1.15 倍并对偏移取整，确保线条与文字 100% 锐利不发虚
+      const rawZoom = GameState.camZoom || 1.0;
+      const zoom = 1.0 + (rawZoom - 1.0) * 0.42;
       const focusScreen = projectCourtRaw(GameState.camFocus.x, GameState.camFocus.y, w, h);
-      const camTx = (w * 0.5 - focusScreen.x * zoom) * dpr;
-      const camTy = (h * 0.5 - focusScreen.y * zoom) * dpr;
+      const camTx = Math.round((w * 0.5 - focusScreen.x * zoom) * dpr);
+      const camTy = Math.round((h * 0.5 - focusScreen.y * zoom) * dpr);
       ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, camTx, camTy);
 
-      // 1. Featherblade Underworld Radial Gradient Background (#1a0b2e -> #000000)
+      // 1. 赛场超清深色背景（移除会导致全屏发蒙掉帧的 ctx.filter 模糊）
       ctx.save();
-      if (GameState.qualityMode !== 'smooth' && GameState.shuttle.inFlight && GameState.shuttle.trajType === 'smash' && GameState.phase === 'ai_incoming') {
-        ctx.filter = 'blur(1.5px)';
-      }
       const bgGrad = ctx.createRadialGradient(w * 0.5, h * 0.42, 20, w * 0.5, h * 0.5, Math.max(w, h) * 0.78);
       bgGrad.addColorStop(0, '#271046');
       bgGrad.addColorStop(0.55, '#1a0b2e');
@@ -4357,14 +4626,7 @@
       const bl = projectCourt(0, 1, w, h);
 
       ctx.save();
-      // 【动态滤镜】：当 GameState.shuttle.trajType === 'smash' 且球正在飞向玩家时，Canvas 背景加上 filter: blur(1.5px)（流畅模式关闭动态模糊）
-      if (GameState.qualityMode !== 'smooth') {
-        if (GameState.shuttle.inFlight && GameState.shuttle.trajType === 'smash' && GameState.phase === 'ai_incoming') {
-          ctx.filter = 'blur(1.5px)';
-        } else if (GameState.camState.blurTimer > 0) {
-          ctx.filter = 'blur(1.5px)';
-        }
-      }
+      // 保持球场线条 100% 原生超清锐利，不使用任何会使画面发蒙的 ctx.filter 模糊
       ctx.beginPath();
       ctx.moveTo(tl.x, tl.y); ctx.lineTo(tr.x, tr.y); ctx.lineTo(br.x, br.y); ctx.lineTo(bl.x, bl.y);
       ctx.closePath();
@@ -4478,14 +4740,12 @@
       }
       ctx.restore();
 
-      // 2.5 Bass Drop Dark-Court Overlay
+      // 2.5 暴击金框特效（仅高亮边框，绝不压暗或模糊球场画面）
       if (GameState.bassDropTimer > 0) {
-        const bdAlpha = Math.min(0.68, (GameState.bassDropTimer / 520) * 0.75);
+        const bdAlpha = Math.min(0.85, (GameState.bassDropTimer / 520));
         ctx.save();
-        ctx.fillStyle = `rgba(5, 2, 12, ${bdAlpha.toFixed(2)})`;
-        ctx.fillRect(0, 0, w, h);
-        ctx.strokeStyle = `rgba(245, 158, 11, ${(bdAlpha * 1.1).toFixed(2)})`;
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = `rgba(245, 158, 11, ${bdAlpha.toFixed(2)})`;
+        ctx.lineWidth = 3;
         ctx.strokeRect(4, 4, w - 8, h - 8);
         ctx.restore();
       }
@@ -4532,7 +4792,7 @@
       });
 
       // Draw Featherblade Posture Bar above AI
-      drawFeatherbladePostureBar(
+      if (false) drawFeatherbladePostureBar(
         ctx,
         aiPt.x + (GameState.aiStaggerTimer > 0 ? Math.sin(now * 0.05) * 6 : 0),
         aiPt.y - 68 * aiPt.scale,
@@ -4567,14 +4827,14 @@
           ctx.strokeText('危', aiPt.x, aiPt.y - 64 - (1 - card.life) * 14);
           ctx.fillStyle = '#f43f5e';
           ctx.shadowColor = '#f43f5e';
-          ctx.shadowBlur = 14;
+          ctx.shadowBlur = 0;
           ctx.textAlign = 'center';
           ctx.fillText('危', aiPt.x, aiPt.y - 64 - (1 - card.life) * 14);
         } else if (card.isSoft) {
           ctx.font = 'italic 900 13px "Noto Serif SC", serif';
           ctx.fillStyle = '#fde047';
           ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 8;
+          ctx.shadowBlur = 0;
           ctx.textAlign = 'center';
           ctx.fillText('✦⭐✦ 软球破绽!', aiPt.x, aiPt.y - 62 - (1 - card.life) * 12);
         } else {
@@ -4599,6 +4859,22 @@
         const inReach = isPlayerInLandingCircle();
         const isPerfectWindowNow = Math.abs(ratio) <= 0.14;
 
+        syncCenterFootworkCompass();
+        const cdEl = document.getElementById('sensoryCountdownText');
+        if (cdEl) {
+          if (now < GameState.sensoryLockUntilMs) {
+            cdEl.textContent = `失衡惩罚: ${((GameState.sensoryLockUntilMs - now) / 1000).toFixed(2)}s`;
+            cdEl.className = 'text-[9px] text-rose-400 font-mono font-black';
+          } else {
+            cdEl.textContent = `慢动作窗口: ${Math.max(0, (inc.expireTime - now) / 1000).toFixed(1)}s`;
+            cdEl.className = 'text-[8px] text-cyan-300 font-mono';
+          }
+        }
+        const timerBarFill = document.getElementById('sensoryTimerBarFill');
+        if (timerBarFill) {
+          const remainPct = Math.max(0, Math.min(100, ((inc.expireTime - now) / Math.max(400, inc.expireTime - inc.startTime)) * 100));
+          timerBarFill.style.width = `${remainPct}%`;
+        }
         const cursor = document.getElementById('qteBarCursor');
         if (cursor) {
           const pct = Math.max(0, Math.min(96, (1 - Math.max(-0.3, Math.min(1, ratio))) * 74));
@@ -4646,7 +4922,7 @@
           ctx.lineWidth = isPerfectWindowNow ? 5.0 : 2.4;
           if (isPerfectWindowNow) {
             ctx.shadowColor = '#fde047';
-            ctx.shadowBlur = 18;
+            ctx.shadowBlur = 0;
           }
           ctx.stroke();
           ctx.shadowBlur = 0;
@@ -4677,7 +4953,7 @@
           ctx.font = 'italic 900 11px "Noto Serif SC", serif';
           ctx.textAlign = 'center';
           ctx.shadowColor = '#000';
-          ctx.shadowBlur = 6;
+          ctx.shadowBlur = 0;
           const needRight = (inc.targetX - GameState.playerVisual.x) >= -0.02;
           const handHint = needRight ? '👉右推【正手接杀】' : '👈左推【反手接杀(窗口-20%)】';
           const zGateHint = GameState.shuttle.z >= 0.30 ? ` [高空Z=${GameState.shuttle.z.toFixed(2)}待下落]` : '';
@@ -4689,6 +4965,24 @@
             tPt.y - threatR - 14
           );
           ctx.restore();
+        }
+      }
+
+      // 5.5 第二次判断（所作步伐对应的球路）短时间决策倒计时与超时判罚
+      if (GameState.phase === 'player_offense' && !GameState.paused) {
+        const exp = GameState.shotDecisionExpireTime || (now + 1600);
+        const startT = GameState.shotDecisionStartTime || (now - 200);
+        const timerBarFill = document.getElementById('sensoryTimerBarFill');
+        if (timerBarFill) {
+          const pct = Math.max(0, Math.min(100, ((exp - now) / Math.max(400, exp - startT)) * 100));
+          timerBarFill.style.width = `${pct}%`;
+        }
+        if (now > exp && !GameState.swingLock) {
+          // 第二次判断超时未出球 -> 犹豫错失击球点丢分！
+          SoundEngine.playHit('miss');
+          spawnFloatingText(GameState.playerVisual.x, GameState.playerVisual.y - 0.06, '⏳ 球路判断超时! 错失击球点', '#f43f5e');
+          showCanvasBanner('⏳ 第二次判断（选球路）超时!', '步伐到位后未在短时间内果断选出对应球路，错失击球点失分！', '#f43f5e');
+          scorePoint('ai', '球路判断超时');
         }
       }
 
@@ -4712,7 +5006,7 @@
         frameFactor
       });
 
-      drawFeatherbladePostureBar(
+      if (false) drawFeatherbladePostureBar(
         ctx,
         pPt.x,
         pPt.y + 18,
@@ -4738,7 +5032,7 @@
         ctx.strokeStyle = '#ef4444';
         ctx.lineWidth = 3.2;
         ctx.shadowColor = '#ef4444';
-        ctx.shadowBlur = 16;
+        ctx.shadowBlur = 0;
         ctx.beginPath();
         ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
         ctx.stroke();
@@ -4990,7 +5284,7 @@
         ctx.globalAlpha = Math.min(1, lb.life * 1.4);
         ctx.strokeStyle = '#fde047';
         ctx.shadowColor = '#f59e0b';
-        ctx.shadowBlur = 22;
+        ctx.shadowBlur = 0;
         ctx.lineWidth = 6;
         ctx.beginPath();
         lb.points.forEach((pt, idx) => {
@@ -5046,7 +5340,7 @@
         ctx.fillStyle = arcCol;
         ctx.textAlign = 'center';
         ctx.shadowColor = '#000';
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 0;
         ctx.fillText(arcMsg, pPt.x, pPt.y - 68);
         ctx.restore();
       }
@@ -5129,20 +5423,20 @@
       // Reset transform so UI overlays, banners, and vignette are unaffected by camera zoom!
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      // 10. Task 3: Screen Bloom Effect (Radiant White-Gold Flash on Perfect Parry & Finisher)
+      // 10. 局部清透高光环（移除全屏泛白遮罩，保持画面通透清晰）
       if (GameState.bloomAlpha > 0.01) {
         ctx.save();
-        ctx.globalCompositeOperation = 'screen';
         const bloomPt = projectCourt(GameState.playerVisual.x, GameState.playerVisual.y, w, h);
         const bloomGrad = ctx.createRadialGradient(
-          bloomPt.x, bloomPt.y - 24, 10,
-          w * 0.5, h * 0.5, Math.max(w, h) * 0.75
+          bloomPt.x, bloomPt.y - 24, 4,
+          bloomPt.x, bloomPt.y - 24, 95
         );
-        bloomGrad.addColorStop(0, `rgba(255, 255, 255, ${(GameState.bloomAlpha * 0.92).toFixed(2)})`);
-        bloomGrad.addColorStop(0.35, `rgba(254, 240, 138, ${(GameState.bloomAlpha * 0.55).toFixed(2)})`);
+        bloomGrad.addColorStop(0, `rgba(254, 240, 138, ${(GameState.bloomAlpha * 0.35).toFixed(2)})`);
         bloomGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
         ctx.fillStyle = bloomGrad;
-        ctx.fillRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.arc(bloomPt.x, bloomPt.y - 24, 95, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       }
 
@@ -5160,7 +5454,7 @@
       }
 
       // 12. Canvas-Internal Banner & Tutorial Prompt
-      if (GameState.tutorialStep > 0) {
+      if (false && GameState.tutorialStep > 0) {
         const tutMsgs = {
           1: '🎓【引导 1/4】拖动左下角【虚拟摇杆】体验赛场神行步伐（或直接点击发球键）',
           2: '🎓【引导 2/4】点击右下角【贴网短发球】增加对手破绽值！',
@@ -5180,6 +5474,47 @@
         ctx.font = 'italic 700 12px "Noto Serif SC", serif';
         ctx.textAlign = 'center';
         ctx.fillText(tutMsgs[GameState.tutorialStep] || '', w / 2, 26);
+        ctx.restore();
+      }
+
+      // 【极简比分飘字】：只在得分或失误瞬间在屏幕正中央飘出巨大比分 (如 1 : 0)，2秒渐隐消失
+      if (GameState.scoreBannerUntilMs && now < GameState.scoreBannerUntilMs) {
+        const remain = GameState.scoreBannerUntilMs - now;
+        const alpha = Math.min(1, remain / 450);
+        const floatUp = (1 - remain / 2000) * 18;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.strokeStyle = '#0f0f0f';
+        ctx.lineWidth = 7;
+        ctx.font = '900 52px "Inter", "Noto Sans SC", sans-serif';
+        ctx.strokeText(GameState.scoreBannerText, w / 2, h * 0.36 - floatUp);
+        ctx.fillStyle = GameState.scoreBannerColor || '#fde047';
+        ctx.fillText(GameState.scoreBannerText, w / 2, h * 0.36 - floatUp);
+
+        if (GameState.scoreBannerSub) {
+          ctx.lineWidth = 4;
+          ctx.font = '800 16px "Noto Sans SC", sans-serif';
+          ctx.strokeText(`(${GameState.scoreBannerSub})`, w / 2, h * 0.36 + 38 - floatUp);
+          ctx.fillStyle = '#fef3c7';
+          ctx.fillText(`(${GameState.scoreBannerSub})`, w / 2, h * 0.36 + 38 - floatUp);
+        }
+        ctx.restore();
+      }
+
+      // 【极简单手发球提示】：发球阶段在屏幕中下方 (H * 0.72) 提示点击屏幕任意位置发球
+      if (GameState.phase === 'serve' && !GameState.paused) {
+        const pulse = 0.55 + 0.40 * Math.sin(now * 0.006);
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = '#fef3c7';
+        ctx.strokeStyle = '#0f0f0f';
+        ctx.lineWidth = 4;
+        ctx.font = '800 17px "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.strokeText('👆 点击屏幕任意位置发球', w / 2, h * 0.72);
+        ctx.fillText('👆 点击屏幕任意位置发球', w / 2, h * 0.72);
         ctx.restore();
       }
 
@@ -5225,20 +5560,7 @@
         ctx.restore();
       }
 
-      // 【VFX 任务 1：全局暗角光影 (Vignette)】
-      // Full-screen radial gradient dark vignette: center transparent, outer edges deep purple/black semi-transparent
-      ctx.save();
-      const globalVig = ctx.createRadialGradient(
-        w * 0.5, h * 0.48, Math.min(w, h) * 0.26,
-        w * 0.5, h * 0.50, Math.max(w, h) * 0.74
-      );
-      globalVig.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      globalVig.addColorStop(0.58, 'rgba(18, 7, 32, 0.22)');
-      globalVig.addColorStop(0.82, 'rgba(14, 5, 26, 0.56)');
-      globalVig.addColorStop(1, 'rgba(0, 0, 0, 0.84)');
-      ctx.fillStyle = globalVig;
-      ctx.fillRect(0, 0, w, h);
-      ctx.restore();
+      // 保持全域画面通透锐利，不再叠加全屏暗雾遮罩
 
       rafId = requestAnimationFrame(renderCourtLoop);
     }
@@ -5915,11 +6237,19 @@
         ctx.fillStyle = '#38bdf8';
         ctx.textAlign = 'center';
         ctx.fillText('👟 急停转身 0.15s', 0, hy - 19);
-      } else if (isOffBalance) {
-        ctx.fillStyle = '#fda4af';
-        ctx.font = 'italic 900 10px "Noto Serif SC", serif';
+      } else if (opts.isPlayer) {
+        const sym = GameState.cogSymbol || '0';
+        const symCol = GameState.cogImbalanced ? '#f43f5e' : (sym === '+' ? '#fbbf24' : (sym === '-' ? '#38bdf8' : '#34d399'));
+        ctx.font = '900 11px "Noto Sans SC", sans-serif';
+        ctx.strokeStyle = '#0f0f0f';
+        ctx.lineWidth = 3.5;
         ctx.textAlign = 'center';
-        ctx.fillText('⚠️重心失衡', 0, hy - 19);
+        const badgeTxt = GameState.cogImbalanced
+          ? `⚠️失衡[${sym}] (慢0.5s) · ${GameState.lastRacketActionText}`
+          : `重心[${sym}] · ${GameState.lastRacketActionText}`;
+        ctx.strokeText(badgeTxt, 0, hy - 20);
+        ctx.fillStyle = symCol;
+        ctx.fillText(badgeTxt, 0, hy - 20);
       }
 
       ctx.restore();
@@ -5930,7 +6260,13 @@
     function bindAllControls() {
       // Click anywhere on the Canvas during 【重心崩溃】 (Finisher state) to immediately execute!
       canvas.addEventListener('pointerdown', (e) => {
-        if (GameState.phase === 'break_finisher' && !GameState.paused) {
+        if (GameState.paused) return;
+        if (GameState.phase === 'serve') {
+          e.preventDefault();
+          executePlayerServe('high', 2);
+          return;
+        }
+        if (GameState.phase === 'break_finisher') {
           e.preventDefault();
           executeBreakFinisher({ name: '🩸 制胜扣杀·赛场断头扣杀' });
         }
@@ -6123,6 +6459,10 @@
         const dir = btn.dataset.dir;
         btn.addEventListener('pointerdown', (e) => {
           e.preventDefault();
+          if (GameState.phase === 'ai_incoming') {
+            handleSensoryFootworkSelect(dir);
+            return;
+          }
           const nowMs = performance.now();
           // 双击同一方向键触发 2.0x 爆发冲刺 (Dash)
           if (!activeDirs.has(dir) && lastDpadDir === dir && (nowMs - lastDpadTapTime) <= 240 && GameState.pStamina >= 12) {
@@ -6340,22 +6680,63 @@
         });
       }
 
-      // H5 移动端首次 pointerdown 或 click 自动进入全屏模式 (requestFullscreen)
-      let fullscreenRequested = false;
-      function tryEnterFullscreen() {
-        if (fullscreenRequested) return;
-        fullscreenRequested = true;
+      // 全屏切换引擎：支持顶部【⛶ 全屏】按钮随时切换 + 兼容浏览器拦截时的沉浸式全窗口回退
+      const btnFullscreen = document.getElementById('btnFullscreen');
+      function updateFullscreenBtnUI() {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.body.classList.contains('pseudo-fullscreen'));
+        if (btnFullscreen) {
+          btnFullscreen.textContent = isFs ? '🗗 退出全屏' : '⛶ 全屏';
+        }
+        setTimeout(resizeCanvas, 60);
+      }
+
+      function toggleGameFullscreen() {
         const docEl = document.documentElement;
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-          if (docEl.requestFullscreen) {
-            docEl.requestFullscreen().catch(() => {});
-          } else if (docEl.webkitRequestFullscreen) {
-            try { docEl.webkitRequestFullscreen(); } catch (e) {}
+        const isNativeFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        if (isNativeFs) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) { try { document.webkitExitFullscreen(); } catch (e) {} }
+          document.body.classList.remove('pseudo-fullscreen');
+          updateFullscreenBtnUI();
+          return;
+        }
+        if (document.body.classList.contains('pseudo-fullscreen')) {
+          document.body.classList.remove('pseudo-fullscreen');
+          updateFullscreenBtnUI();
+          return;
+        }
+        if (docEl.requestFullscreen) {
+          docEl.requestFullscreen().then(() => {
+            updateFullscreenBtnUI();
+          }).catch(() => {
+            // 若处于 iframe 或浏览器限制原生全屏，启用 100dvh 沉浸式全屏铺满并提示
+            document.body.classList.add('pseudo-fullscreen');
+            window.scrollTo(0, 1);
+            resizeCanvas();
+            updateFullscreenBtnUI();
+            showCanvasBanner('⛶ 已开启沉浸式铺满模式', '当前窗口已 100% 铺满可视区域', '#fbbf24');
+          });
+        } else if (docEl.webkitRequestFullscreen) {
+          try {
+            docEl.webkitRequestFullscreen();
+            updateFullscreenBtnUI();
+          } catch (e) {
+            document.body.classList.add('pseudo-fullscreen');
+            resizeCanvas();
+            updateFullscreenBtnUI();
           }
+        } else {
+          document.body.classList.add('pseudo-fullscreen');
+          resizeCanvas();
+          updateFullscreenBtnUI();
         }
       }
-      window.addEventListener('pointerdown', tryEnterFullscreen, { once: true });
-      window.addEventListener('click', tryEnterFullscreen, { once: true });
+
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', toggleGameFullscreen);
+      }
+      document.addEventListener('fullscreenchange', updateFullscreenBtnUI);
+      document.addEventListener('webkitfullscreenchange', updateFullscreenBtnUI);
 
       // 阻止移动端双击放大
       let lastTouchEnd = 0;
@@ -6388,7 +6769,7 @@
         resizeCanvas();
         const pOverlay = document.getElementById('portraitOverlay');
         if (!pOverlay) return;
-        const isPortrait = window.innerHeight > window.innerWidth;
+        const isPortrait = false; // 竖屏优先设计，绝不弹出横屏锁定遮罩
         if (isPortrait && !GameState.portraitDismissed) {
           pOverlay.classList.remove('hidden');
           pOverlay.classList.add('flex');
